@@ -1,10 +1,78 @@
-#ifndef STATS_MACROS_H
-#define STATS_MACROS_H
+#ifndef ARK_STATS_MACROS_H
+#define ARK_STATS_MACROS_H
 
-#define ARK_STATS_CLIENT_VERSION        "0.1.0"
+#include "\userconfig\ark_stats\log\global.h"
 
-#define CONCAT_ADDON_PATH(FILE)         x\ark\addons\ark_stats_client\FILE
+#define ARK_STATS_VERSION               "0.1.0"
+
+#define CONCAT_ADDON_PATH(FILE)         x\ark\addons\ark_stats\FILE
 #define ADDON_PATH(FILE)                #CONCAT_ADDON_PATH(FILE)
+
+#define STATS_BASE_CONFIG               "ArkStats"
+#define STATS_MISSION_CONFIG_FILE       missionConfigFile >> STATS_BASE_CONFIG
+#define STATS_CONFIG_FILE               configFile >> STATS_BASE_CONFIG
+
+#define CONFIG_TYPE_BOOL                0
+#define CONFIG_TYPE_NUMBER              1
+#define CONFIG_TYPE_TEXT                2
+#define CONFIG_TYPE_ARRAY               3
+#define CONFIG_TYPE_FUNCTIONS           [ark_stats_config_fnc_getBool, ark_stats_config_fnc_getNumber, ark_stats_config_fnc_getText, ark_stats_config_fnc_getArray]
+
+#define EXTENSION_NAME                                              "ark_stats_extension"
+#define RESULT_ID_IDX                                               0
+#define RESULT_TYPE_IDX                                             1
+#define RESULT_DATA_IDX                                             2
+
+#define RESULT_TYPE_OK                                              0
+#define RESULT_TYPE_ERROR                                           1
+
+
+// Extension call type IDs
+#define CALL_TYPE_ID_VERSION                                        "ve"
+#define CALL_TYPE_ID_MISSION                                        "mi"
+#define CALL_TYPE_ID_MISSION_ATTRIBUTE                              "ma"
+#define CALL_TYPE_ID_MISSION_EVENT                                  "me"
+#define CALL_TYPE_ID_ENTITY                                         "en"
+#define CALL_TYPE_ID_ENTITY_ATTRIBUTE                               "ea"
+#define CALL_TYPE_ID_ENTITY_EVENT                                   "ee"
+#define CALL_TYPE_ID_ENTITY_POSITION                                "ep"
+
+
+// Attribute type IDs
+#define ATTRIBUTE_TYPE_ID_MISSION_NAME                              1
+#define ATTRIBUTE_TYPE_ID_MISSION_WORLD                             2
+#define ATTRIBUTE_TYPE_ID_MISSION_DATE                              3
+#define ATTRIBUTE_TYPE_ID_MISSION_TIME                              4
+#define ATTRIBUTE_TYPE_ID_MISSION_FOG                               5
+#define ATTRIBUTE_TYPE_ID_MISSION_WEATHER                           6
+
+#define ATTRIBUTE_TYPE_ID_ENTITY_SIDE                               7
+
+#define ATTRIBUTE_TYPE_ID_PLAYER_UID                                8
+#define ATTRIBUTE_TYPE_ID_PLAYER_NAME                               9
+#define ATTRIBUTE_TYPE_ID_PLAYER_GROUP                              10
+#define ATTRIBUTE_TYPE_ID_PLAYER_IS_JIP                             11
+#define ATTRIBUTE_TYPE_ID_PLAYER_HULL_FACTION                       12
+#define ATTRIBUTE_TYPE_ID_PLAYER_HULL_GEAR_TEMPLATE                 13
+#define ATTRIBUTE_TYPE_ID_PLAYER_HULL_UNIFORM_TEMPLATE              14
+#define ATTRIBUTE_TYPE_ID_PLAYER_HULL_GEAR_CLASS                    15
+
+
+// Event type IDs
+#define EVENT_TYPE_ID_MISSION_SAFETY_ENDED                          1
+
+#define EVENT_TYPE_ID_ENTITY_KILLED                                 2
+#define EVENT_TYPE_ID_ENTITY_VEHICLE                                3
+
+#define EVENT_TYPE_ID_PLAYER_CONNECTED                              4
+#define EVENT_TYPE_ID_PLAYER_DISCONNECTED                           5
+
+
+// Position type IDs
+#define POSITION_TYPE_ID_ENTITY_POSITION                            1
+
+#define POSITION_TYPE_ID_AI_POSITION                                2
+
 
 
 // WARNING
@@ -204,4 +272,4 @@
 //          "some_variable"
 #define QUOTE(VAR) #VAR
 
-#endif //STATS_MACROS_H
+#endif //ARK_STATS_MACROS_H

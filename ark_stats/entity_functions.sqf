@@ -1,0 +1,57 @@
+#include "ark_stats_macros.h"
+
+#include "\userconfig\ark_stats\log\entity.h"
+#include "logbook.h"
+
+
+ark_stats_entity_fnc_preInit = {
+    if (!ark_stats_ext_hasError) then {
+        DEBUG("ark.stats.entity","Preinit was successfull.");
+    } else {
+        ERROR("ark.stats.entity","Preinit failed due to extension error.");
+    };
+    DEBUG("ark.stats.entity","Preinit done.");
+};
+
+ark_stats_entity_fnc_postInit = {
+    [] spawn ark_stats_entity_fnc_track;
+    DEBUG("ark.stats.entity","Postinit done.");
+};
+
+ark_stats_entity_fnc_track = {
+    while {!ark_stats_ext_hasError} do {
+        {
+            if (ark_stats_ext_hasError) exitWith {
+                ERROR("ark.stats.entity","Stopping tracking due to extension error.");
+            };
+            if (!isNull _x && alive _x) then {
+                [_x] call ark_stats_entity_fnc_trackEntity;
+            };
+        } foreach allUnits;
+        sleep ark_stats_mission_trackingDelay;
+    };
+};
+
+ark_stats_entity_fnc_trackEntity = {
+    FUN_ARGS_1(_unit);
+
+    private _entityId = _x getVariable "ark_stats_entityId";
+    if (isNil {_entityId}) then {
+        _entityId = [ark_stats_mission_id] call ark_stats_ext_fnc_entity;
+        _x setVariable ["ark_stats_entityId", _entityId, true];
+        DEBUG("ark.stats.entity",FMT_2("Created new entity from unit '%1' with ID '%2'",_unit,_entityId));
+        [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_ENTITY_SIDE, "", side _x] call ark_stats_ext_fnc_entityAttribute;
+        if (isPlayer _x) then {
+            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_PLAYER_UID, "", getPlayerUID _x] call ark_stats_ext_fnc_entityAttribute;
+            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_PLAYER_NAME, "", name _x] call ark_stats_ext_fnc_entityAttribute;
+            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_PLAYER_GROUP, "", group _x] call ark_stats_ext_fnc_entityAttribute;
+            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_PLAYER_IS_JIP, "", didJIPOwner _x] call ark_stats_ext_fnc_entityAttribute;
+            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_PLAYER_HULL_FACTION, "", _x getVariable ["hull3_faction", ""]] call ark_stats_ext_fnc_entityAttribute;
+            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_PLAYER_HULL_GEAR_TEMPLATE, "", _x getVariable ["hull3_gear_template", ""]] call ark_stats_ext_fnc_entityAttribute;
+            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_PLAYER_HULL_UNIFORM_TEMPLATE, "", _x getVariable ["hull3_uniform_template", ""]] call ark_stats_ext_fnc_entityAttribute;
+            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_PLAYER_HULL_GEAR_CLASS, "", _x getVariable ["hull3_gear_class", ""]] call ark_stats_ext_fnc_entityAttribute;
+        };
+    };
+    [ark_stats_mission_id, _entityId, POSITION_TYPE_ID_ENTITY_POSITION, getPosASL _x] call ark_stats_ext_fnc_entityPosition;
+    [ark_stats_mission_id, _entityId, EVENT_TYPE_ID_ENTITY_VEHICLE, "", typeOf _x] call ark_stats_ext_fnc_entityEvent;
+};

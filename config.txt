@@ -1,0 +1,6 @@
+info
+localhost
+3306
+ark_stats
+password
+ark_stats
