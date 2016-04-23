@@ -61,11 +61,13 @@
 // Event type IDs
 #define EVENT_TYPE_ID_MISSION_SAFETY_ENDED                          1
 
-#define EVENT_TYPE_ID_ENTITY_KILLED                                 2
-#define EVENT_TYPE_ID_ENTITY_VEHICLE                                3
+#define EVENT_TYPE_ID_ENTITY_KILLED_BY_ENTITY                       2
+#define EVENT_TYPE_ID_ENTITY_KILLED_BY_UNKNOWN                      3
+#define EVENT_TYPE_ID_ENTITY_VEHICLE                                4
 
-#define EVENT_TYPE_ID_PLAYER_CONNECTED                              4
-#define EVENT_TYPE_ID_PLAYER_DISCONNECTED                           5
+#define EVENT_TYPE_ID_PLAYER_CONNECTED                              5
+#define EVENT_TYPE_ID_PLAYER_DISCONNECTED_FROM_ENTITY               6
+#define EVENT_TYPE_ID_PLAYER_DISCONNECTED                           7
 
 
 // Position type IDs

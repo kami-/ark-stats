@@ -14,6 +14,7 @@ ark_stats_entity_fnc_preInit = {
 };
 
 ark_stats_entity_fnc_postInit = {
+    addMissionEventHandler ["EntityKilled", ark_stats_entity_fnc_killedHandler];
     [] spawn ark_stats_entity_fnc_track;
     DEBUG("ark.stats.entity","Postinit done.");
 };
@@ -25,11 +26,22 @@ ark_stats_entity_fnc_track = {
                 ERROR("ark.stats.entity","Stopping tracking due to extension error.");
             };
             if (!isNull _x && alive _x) then {
-                [_x] call ark_stats_entity_fnc_trackEntity;
+                DEBUG("ark.stats.entity",FMT_1("Unit '%1' is alive.",_x));
+                if (isPlayer _x || {!(_x in playableUnits)}) then {
+                    DEBUG("ark.stats.entity",FMT_1("Unit '%1' is a player or AI and will be tracked.",_x));
+                    [_x] call ark_stats_entity_fnc_trackEntity;
+                } else {
+                    DEBUG("ark.stats.entity",FMT_1("Unit '%1' is a playable unit and won't be tracked.",_x));
+                    if (!isNil {_x getVariable "ark_stats_entityId"}) then {
+                        DEBUG("ark.stats.entity",FMT_2("Playable unit's '%1' entityId '%2' will be removed.",_x,_x getVariable "ark_stats_entityId"));
+                        _x setVariable ["ark_stats_entityId", nil, true];
+                    };
+                };
             };
         } foreach allUnits;
         sleep ark_stats_mission_trackingDelay;
     };
+    ERROR("ark.stats.entity","Stopping tracking due to extension error.");
 };
 
 ark_stats_entity_fnc_trackEntity = {
@@ -38,10 +50,14 @@ ark_stats_entity_fnc_trackEntity = {
     private _entityId = _x getVariable "ark_stats_entityId";
     if (isNil {_entityId}) then {
         _entityId = [ark_stats_mission_id] call ark_stats_ext_fnc_entity;
+        if (ark_stats_ext_hasError) exitWith {
+            ERROR("ark.stats.entity",FMT_1("Failed to create entity due to extension error for unit '%1'.",_unit));
+        };
         _x setVariable ["ark_stats_entityId", _entityId, true];
         DEBUG("ark.stats.entity",FMT_2("Created new entity from unit '%1' with ID '%2'",_unit,_entityId));
         [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_ENTITY_SIDE, "", side _x] call ark_stats_ext_fnc_entityAttribute;
         if (isPlayer _x) then {
+            DEBUG("ark.stats.entity",FMT_2("Tracking player unit '%1' with ID '%2'.",_unit,_entityId));
             [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_PLAYER_UID, "", getPlayerUID _x] call ark_stats_ext_fnc_entityAttribute;
             [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_PLAYER_NAME, "", name _x] call ark_stats_ext_fnc_entityAttribute;
             [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_PLAYER_GROUP, "", group _x] call ark_stats_ext_fnc_entityAttribute;
@@ -54,4 +70,25 @@ ark_stats_entity_fnc_trackEntity = {
     };
     [ark_stats_mission_id, _entityId, POSITION_TYPE_ID_ENTITY_POSITION, getPosASL _x] call ark_stats_ext_fnc_entityPosition;
     [ark_stats_mission_id, _entityId, EVENT_TYPE_ID_ENTITY_VEHICLE, "", typeOf _x] call ark_stats_ext_fnc_entityEvent;
+};
+
+ark_stats_entity_fnc_killedHandler = {
+    FUN_ARGS_2(_killed,_killer);
+
+    if (ark_stats_ext_hasError) exitWith {
+        DEBUG("ark.stats.entity","Killed handler skipped due to extension error.");
+    };
+    private ["_killedEntityId", "_killerEntityId"];
+    _killedEntityId = _killed getVariable "ark_stats_entityId";
+    _killerEntityId = _killer getVariable "ark_stats_entityId";
+    if (isNil {_killedEntityId}) exitWith {
+        DEBUG("ark.stats.entity",FMT_1("Killed handler skipped. Killed unit '%1' is not tracked.",_killed));
+    };
+    if (!isNil {_killerEntityId}) then {
+        [ark_stats_mission_id, _killedEntityId, EVENT_TYPE_ID_ENTITY_KILLED_BY_ENTITY, _killerEntityId, ""] call ark_stats_ext_fnc_entityEvent;
+        DEBUG("ark.stats.entity",FMT_4("Entity '%1' with ID '%2' was killed by entity '%3' with ID '%4'.",_killed,_killedEntityId,_killer,_killerEntityId));
+    } else {
+        [ark_stats_mission_id, _killedEntityId, EVENT_TYPE_ID_ENTITY_KILLED_BY_UNKNOWN, "", [str _killer, ":", "-"] call CBA_fnc_replace] call ark_stats_ext_fnc_entityEvent;
+        DEBUG("ark.stats.entity",FMT_3("Entity '%1' with ID '%2' was killed by unknown entity '%3'.",_killed,_killedEntityId,_killer));
+    };
 };

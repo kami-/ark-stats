@@ -142,12 +142,16 @@ SET @event_type_name = '';
 SET @event_type_id = @event_type_id + 1; SET @event_name = 'mission.safety_ended';
 INSERT INTO event_type(id, event_name) VALUES(@event_type_id, @event_name) ON DUPLICATE KEY UPDATE event_name = @event_name;
 
-SET @event_type_id = @event_type_id + 1; SET @event_name = 'entity.killed';
+SET @event_type_id = @event_type_id + 1; SET @event_name = 'entity.killed_by_entity';
+INSERT INTO event_type(id, event_name) VALUES(@event_type_id, @event_name) ON DUPLICATE KEY UPDATE event_name = @event_name;
+SET @event_type_id = @event_type_id + 1; SET @event_name = 'entity.killed_by_unkown';
 INSERT INTO event_type(id, event_name) VALUES(@event_type_id, @event_name) ON DUPLICATE KEY UPDATE event_name = @event_name;
 SET @event_type_id = @event_type_id + 1; SET @event_name = 'entity.vehicle';
 INSERT INTO event_type(id, event_name) VALUES(@event_type_id, @event_name) ON DUPLICATE KEY UPDATE event_name = @event_name;
 
 SET @event_type_id = @event_type_id + 1; SET @event_name = 'player.connected';
+INSERT INTO event_type(id, event_name) VALUES(@event_type_id, @event_name) ON DUPLICATE KEY UPDATE event_name = @event_name;
+SET @event_type_id = @event_type_id + 1; SET @event_name = 'player.disconnected_from_entity';
 INSERT INTO event_type(id, event_name) VALUES(@event_type_id, @event_name) ON DUPLICATE KEY UPDATE event_name = @event_name;
 SET @event_type_id = @event_type_id + 1; SET @event_name = 'player.disconnected';
 INSERT INTO event_type(id, event_name) VALUES(@event_type_id, @event_name) ON DUPLICATE KEY UPDATE event_name = @event_name;
