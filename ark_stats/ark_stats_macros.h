@@ -57,6 +57,17 @@
 #define ATTRIBUTE_TYPE_ID_PLAYER_HULL_UNIFORM_TEMPLATE              14
 #define ATTRIBUTE_TYPE_ID_PLAYER_HULL_GEAR_CLASS                    15
 
+#define ATTRIBUTE_TYPE_ID_MARKER_SHAPE                              16
+#define ATTRIBUTE_TYPE_ID_MARKER_TYPE                               17
+#define ATTRIBUTE_TYPE_ID_MARKER_NAME                               18
+#define ATTRIBUTE_TYPE_ID_MARKER_TEXT                               19
+#define ATTRIBUTE_TYPE_ID_MARKER_SIZE_A                             20
+#define ATTRIBUTE_TYPE_ID_MARKER_SIZE_B                             21
+#define ATTRIBUTE_TYPE_ID_MARKER_DIRECTION                          22
+#define ATTRIBUTE_TYPE_ID_MARKER_COLOR                              23
+#define ATTRIBUTE_TYPE_ID_MARKER_BRUSH                              24
+#define ATTRIBUTE_TYPE_ID_MARKER_ALPHA                              25
+
 
 // Event type IDs
 #define EVENT_TYPE_ID_MISSION_SAFETY_ENDED                          1

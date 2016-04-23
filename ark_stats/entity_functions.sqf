@@ -15,8 +15,35 @@ ark_stats_entity_fnc_preInit = {
 
 ark_stats_entity_fnc_postInit = {
     addMissionEventHandler ["EntityKilled", ark_stats_entity_fnc_killedHandler];
+    [] call ark_stats_entity_fnc_trackMarkers;
     [] spawn ark_stats_entity_fnc_track;
     DEBUG("ark.stats.entity","Postinit done.");
+};
+
+ark_stats_entity_fnc_trackMarkers = {
+    {
+        if (ark_stats_ext_hasError) exitWith {
+            ERROR("ark.stats.entity","Stopping marker tracking due to extension error.");
+        };
+        if (_x find "hull" == -1) then {
+            _entityId = [ark_stats_mission_id] call ark_stats_ext_fnc_entity;
+            if (ark_stats_ext_hasError) exitWith {
+                ERROR("ark.stats.entity",FMT_1("Failed to create entity due to extension error for marker '%1'.",_x));
+            };
+            DEBUG("ark.stats.entity",FMT_2("Created new entity from marker '%1' with ID '%2'",_x,_entityId));
+            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_MARKER_SHAPE, "", markerShape _x] call ark_stats_ext_fnc_entityAttribute;
+            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_MARKER_TYPE, "", markerType _x] call ark_stats_ext_fnc_entityAttribute;
+            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_MARKER_NAME, "", _x] call ark_stats_ext_fnc_entityAttribute;
+            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_MARKER_TEXT, "", markerText _x] call ark_stats_ext_fnc_entityAttribute;
+            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_MARKER_SIZE_A, (markerSize _x) select 0, ""] call ark_stats_ext_fnc_entityAttribute;
+            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_MARKER_SIZE_B, (markerSize _x) select 1, ""] call ark_stats_ext_fnc_entityAttribute;
+            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_MARKER_DIRECTION, markerDir _x, ""] call ark_stats_ext_fnc_entityAttribute;
+            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_MARKER_COLOR, "", markerColor _x] call ark_stats_ext_fnc_entityAttribute;
+            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_MARKER_BRUSH, "", markerBrush _x] call ark_stats_ext_fnc_entityAttribute;
+            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_MARKER_ALPHA, markerAlpha _x, ""] call ark_stats_ext_fnc_entityAttribute;
+            [ark_stats_mission_id, _entityId, POSITION_TYPE_ID_ENTITY_POSITION, markerPos _x] call ark_stats_ext_fnc_entityPosition;
+        };
+    } foreach allMapMarkers;
 };
 
 ark_stats_entity_fnc_track = {

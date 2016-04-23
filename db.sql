@@ -133,6 +133,27 @@ INSERT INTO attribute_type(id, attribute_name) VALUES(@attribute_type_id, @attri
 SET @attribute_type_id = @attribute_type_id + 1; SET @attribute_name = 'player.hull_gear_class';
 INSERT INTO attribute_type(id, attribute_name) VALUES(@attribute_type_id, @attribute_name) ON DUPLICATE KEY UPDATE attribute_name = @attribute_name;
 
+SET @attribute_type_id = @attribute_type_id + 1; SET @attribute_name = 'marker.shape';
+INSERT INTO attribute_type(id, attribute_name) VALUES(@attribute_type_id, @attribute_name) ON DUPLICATE KEY UPDATE attribute_name = @attribute_name;
+SET @attribute_type_id = @attribute_type_id + 1; SET @attribute_name = 'marker.type';
+INSERT INTO attribute_type(id, attribute_name) VALUES(@attribute_type_id, @attribute_name) ON DUPLICATE KEY UPDATE attribute_name = @attribute_name;
+SET @attribute_type_id = @attribute_type_id + 1; SET @attribute_name = 'marker.name';
+INSERT INTO attribute_type(id, attribute_name) VALUES(@attribute_type_id, @attribute_name) ON DUPLICATE KEY UPDATE attribute_name = @attribute_name;
+SET @attribute_type_id = @attribute_type_id + 1; SET @attribute_name = 'marker.text';
+INSERT INTO attribute_type(id, attribute_name) VALUES(@attribute_type_id, @attribute_name) ON DUPLICATE KEY UPDATE attribute_name = @attribute_name;
+SET @attribute_type_id = @attribute_type_id + 1; SET @attribute_name = 'marker.size_a';
+INSERT INTO attribute_type(id, attribute_name) VALUES(@attribute_type_id, @attribute_name) ON DUPLICATE KEY UPDATE attribute_name = @attribute_name;
+SET @attribute_type_id = @attribute_type_id + 1; SET @attribute_name = 'marker.size_b';
+INSERT INTO attribute_type(id, attribute_name) VALUES(@attribute_type_id, @attribute_name) ON DUPLICATE KEY UPDATE attribute_name = @attribute_name;
+SET @attribute_type_id = @attribute_type_id + 1; SET @attribute_name = 'marker.direction';
+INSERT INTO attribute_type(id, attribute_name) VALUES(@attribute_type_id, @attribute_name) ON DUPLICATE KEY UPDATE attribute_name = @attribute_name;
+SET @attribute_type_id = @attribute_type_id + 1; SET @attribute_name = 'marker.color';
+INSERT INTO attribute_type(id, attribute_name) VALUES(@attribute_type_id, @attribute_name) ON DUPLICATE KEY UPDATE attribute_name = @attribute_name;
+SET @attribute_type_id = @attribute_type_id + 1; SET @attribute_name = 'marker.brush';
+INSERT INTO attribute_type(id, attribute_name) VALUES(@attribute_type_id, @attribute_name) ON DUPLICATE KEY UPDATE attribute_name = @attribute_name;
+SET @attribute_type_id = @attribute_type_id + 1; SET @attribute_name = 'marker.alpha';
+INSERT INTO attribute_type(id, attribute_name) VALUES(@attribute_type_id, @attribute_name) ON DUPLICATE KEY UPDATE attribute_name = @attribute_name;
+
 
 
 
