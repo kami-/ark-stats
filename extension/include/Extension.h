@@ -4,6 +4,7 @@
 #include <string>
 
 #include "spdlog/spdlog.h"
+#include "Queue/Queue.h"
 #include "Poco/Data/Session.h"
 #include "Poco/Data/MySQL/Connector.h"
 
@@ -19,6 +20,13 @@ enum ResponseType {
 	error = 1,
 };
 
+struct Request {
+	uint32_t id;
+	std::string data;
+	
+	Request(const uint32_t i, const std::string d) : id(i), data(d) {};
+};
+
 class Extension {
 public:
     Extension();
@@ -30,8 +38,11 @@ private:
 	const std::string SQF_DELIMITER = ":";
 	const std::string CONFIG_FILE_NAME = "config.txt";
 
+	Queue<Request> requests;
 	std::shared_ptr<spdlog::logger> logger;
 	Poco::Data::Session* session;
+	std::thread dbThread;
+	std::mutex sessionMutex;
 	IdGenerator idGenerator;
 	bool isConnected;
 
@@ -47,6 +58,8 @@ private:
 	Poco::Nullable<double> getNumericValue(const std::vector<std::string>& parameters, const size_t& idx) const;
 	Poco::Nullable<std::string> getCharValue(const std::vector<std::string>& parameters, const size_t& idx) const;
 	void respond(char* output, const uint32_t& requestId, const ResponseType& type, const std::string& response) const;
+	void processRequest(const uint32_t& requestId, const std::string& data);
+	void processRequests();
 };
 
 } // namespace extension

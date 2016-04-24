@@ -42,6 +42,9 @@ void Extension::connect(const std::string& host, const std::string& port, const 
 		Poco::Data::MySQL::Connector::registerConnector();
 		session = new Poco::Data::Session("MySQL", fmt::format("host={};port={};db={};user={};password={};compress=true;auto-reconnect=true", host, port, database, user, password));
 		isConnected = true;
+		logger->trace("Starting DB thread.");
+		dbThread = std::thread(&Extension::processRequests, this);
+		logger->trace("Started DB thread.");
 	}
 	catch (Poco::Data::ConnectionFailedException& e) {
 		logger->error("Failed to connect to MySQL server! Error code: '{}', Error message: {}", e.code(), e.displayText());
@@ -56,6 +59,10 @@ void Extension::disconnect() {
 		delete session;
 	}
 	Poco::Data::MySQL::Connector::unregisterConnector();
+	requests.push(Request(POISON_ID, ""));
+	logger->trace("Pushed poison request.");
+	dbThread.join();
+	logger->trace("DB thread joined.");
 }
 
 spdlog::level::level_enum Extension::getLogLevel(const std::string& logLevelStr) const {
@@ -134,10 +141,35 @@ Poco::Nullable<std::string> Extension::getCharValue(const std::vector<std::strin
 
 void Extension::call(char* output, int outputSize, const char* function) {
 	uint32_t requestId = idGenerator.next();
-	std::string request(function);
+	logger->trace("Pushing new reuquest.");
+	requests.push(Request(requestId, std::string(function)));
+	logger->trace("Pushed new reuquest.");
+	respond(output, requestId, ResponseType::ok, "\"\"");
+	logger->trace("Sent response.");
+}
+
+void Extension::processRequests() {
+	logger->trace("Running DB thread.");
+	auto request = requests.pop();
+	logger->trace("Popped new request.");
+	while (request.id != POISON_ID) {
+		{
+			logger->trace("Accquired lock.");
+			std::lock_guard<std::mutex> lock(sessionMutex);
+			processRequest(request.id, request.data);
+			logger->trace("Processed request.");
+		}
+		logger->trace("Dropped lock.");
+		request = requests.pop();
+		logger->trace("Popped new request.");
+	}
+	logger->trace("Stopping DB thread.");
+}
+
+void Extension::processRequest(const uint32_t& requestId, const std::string& data) {
 	std::vector<std::string> parameters;
 	std::string type = "";
-	split(request, SQF_DELIMITER, parameters);
+	split(data, SQF_DELIMITER, parameters);
 	if (!parameters.empty()) {
 		type = parameters[0];
 	}
@@ -146,14 +178,14 @@ void Extension::call(char* output, int outputSize, const char* function) {
 	for (auto p : parameters) {
 		ss << "'" << p << "', ";
 	}
-	logger->trace("[{}] Request parameters '{}' ({}) and size '{}'!", requestId, request, ss.str(), parameters.size());
+	logger->trace("[{}] Request parameters '{}' ({}) and size '{}'!", requestId, data, ss.str(), parameters.size());
 	try {
 		if (type == "ve" && realParamsSize == 0) { // version
-			respond(output, requestId, ResponseType::ok, fmt::format("\"{}\"", ARK_STATS_EXTENSION_VERSION));
+			//respond(output, requestId, ResponseType::ok, fmt::format("\"{}\"", ARK_STATS_EXTENSION_VERSION));
 		}
 		else if (!isConnected) {
 			logger->error("[{}] Connection lost to the MySQL server!", requestId);
-			respond(output, requestId, ResponseType::error, "\"Connection lost to the MySQL server!\"");
+			//respond(output, requestId, ResponseType::error, "\"Connection lost to the MySQL server!\"");
 		}
 		else if (type == "mi" && realParamsSize == 0) { // mission
 			logger->debug("[{}] Inserting into 'mission'.", requestId);
@@ -164,7 +196,7 @@ void Extension::call(char* output, int outputSize, const char* function) {
 				Poco::Data::Keywords::into(id),
 				Poco::Data::Keywords::now;
 			logger->debug("[{}] New missionId is '{}'.", requestId, id);
-			respond(output, requestId, ResponseType::ok, std::to_string(id));
+			//respond(output, requestId, ResponseType::ok, std::to_string(id));
 		}
 		else if (type == "ma" && realParamsSize == 4) { // mission_attribute
 			uint32_t missionId = parseUnsigned(parameters[1]);
@@ -178,7 +210,7 @@ void Extension::call(char* output, int outputSize, const char* function) {
 				Poco::Data::Keywords::use(numericValue),
 				Poco::Data::Keywords::use(charValue),
 				Poco::Data::Keywords::now;
-			respond(output, requestId, ResponseType::ok, "\"\"");
+			//respond(output, requestId, ResponseType::ok, "\"\"");
 		}
 		else if (type == "me" && realParamsSize == 5) { // mission_event
 			uint32_t missionId = parseUnsigned(parameters[1]);
@@ -194,7 +226,7 @@ void Extension::call(char* output, int outputSize, const char* function) {
 				Poco::Data::Keywords::use(numericValue),
 				Poco::Data::Keywords::use(charValue),
 				Poco::Data::Keywords::now;
-			respond(output, requestId, ResponseType::ok, "\"\"");
+			//respond(output, requestId, ResponseType::ok, "\"\"");
 		}
 		else if (type == "en" && realParamsSize == 2) { // entity
 			uint32_t missionId = parseUnsigned(parameters[1]);
@@ -209,7 +241,7 @@ void Extension::call(char* output, int outputSize, const char* function) {
 				Poco::Data::Keywords::into(id),
 				Poco::Data::Keywords::now;
 			logger->debug("[{}] New entity is '{}'.", requestId, id);
-			respond(output, requestId, ResponseType::ok, std::to_string(id));
+			//respond(output, requestId, ResponseType::ok, std::to_string(id));
 		}
 		else if (type == "ea" && realParamsSize == 5) { // entity_attribute
 			uint32_t missionId = parseUnsigned(parameters[1]);
@@ -225,7 +257,7 @@ void Extension::call(char* output, int outputSize, const char* function) {
 				Poco::Data::Keywords::use(numericValue),
 				Poco::Data::Keywords::use(charValue),
 				Poco::Data::Keywords::now;
-			respond(output, requestId, ResponseType::ok, "\"\"");
+			//respond(output, requestId, ResponseType::ok, "\"\"");
 		}
 		else if (type == "ee" && realParamsSize == 6) { // entity_event
 			uint32_t missionId = parseUnsigned(parameters[1]);
@@ -243,7 +275,7 @@ void Extension::call(char* output, int outputSize, const char* function) {
 				Poco::Data::Keywords::use(numericValue),
 				Poco::Data::Keywords::use(charValue),
 				Poco::Data::Keywords::now;
-			respond(output, requestId, ResponseType::ok, "\"\"");
+			//respond(output, requestId, ResponseType::ok, "\"\"");
 		}
 		else if (type == "ep" && realParamsSize == 7) { // entity_position
 			uint32_t missionId = parseUnsigned(parameters[1]);
@@ -263,16 +295,16 @@ void Extension::call(char* output, int outputSize, const char* function) {
 				Poco::Data::Keywords::use(posY),
 				Poco::Data::Keywords::use(posZ),
 				Poco::Data::Keywords::now;
-			respond(output, requestId, ResponseType::ok, "\"\"");
+			//respond(output, requestId, ResponseType::ok, "\"\"");
 		}
 		else {
 			logger->debug("[{}] Invlaid command type '{}'!", requestId, type);
-			respond(output, requestId, ResponseType::error, fmt::format("\"Invlaid command type '{}'!\"", type));
+			//respond(output, requestId, ResponseType::error, fmt::format("\"Invlaid command type '{}'!\"", type));
 		}
 	}
 	catch (Poco::Data::MySQL::MySQLException& e) {
 		logger->error("Error executing prepared statement! Error code: '{}', Error message: {}", e.code(), e.displayText());
-		respond(output, requestId, ResponseType::error, fmt::format("\"Error executing prepared statement!\""));
+		//respond(output, requestId, ResponseType::error, fmt::format("\"Error executing prepared statement!\""));
 	}
 }
 

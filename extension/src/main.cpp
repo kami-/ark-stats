@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
 		extension->call(output, outputSize, line.c_str());
 		std::cout << "ARK_STATS: " << output << std::endl;
 	}
-    delete extension;
+	delete extension;
     return 0;
 }
 
