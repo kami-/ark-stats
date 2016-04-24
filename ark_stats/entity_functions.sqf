@@ -96,7 +96,7 @@ ark_stats_entity_fnc_trackEntity = {
         };
     };
     [ark_stats_mission_id, _entityId, POSITION_TYPE_ID_ENTITY_POSITION, getPosASL _x] call ark_stats_ext_fnc_entityPosition;
-    [ark_stats_mission_id, _entityId, EVENT_TYPE_ID_ENTITY_VEHICLE, "", typeOf _x] call ark_stats_ext_fnc_entityEvent;
+    [ark_stats_mission_id, _entityId, EVENT_TYPE_ID_ENTITY_VEHICLE, "", typeOf vehicle _x] call ark_stats_ext_fnc_entityEvent;
 };
 
 ark_stats_entity_fnc_killedHandler = {
