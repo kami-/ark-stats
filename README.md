@@ -15,6 +15,8 @@ Copy `config.txt` to `c:\Users\{User}\AppData\Local\ArkStatsExtension\` folder. 
 ###Dependencies
 You will need to build POCO yourself. Data/Mysql has a dependency on MySQL C Connector. Build everything for 32bit.
 
+* Visual C++ Redistributable for Visual Studio 2015 x86 https://www.microsoft.com/en-us/download/details.aspx?id=48145
+
 * POCO C++ http://pocoproject.org/
     ** Foundation
     ** Data
