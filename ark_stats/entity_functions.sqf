@@ -5,6 +5,7 @@
 
 
 ark_stats_entity_fnc_preInit = {
+    ark_stats_entity_positiontrackingMinDistance = 1;
     if (!ark_stats_ext_hasError) then {
         DEBUG("ark.stats.entity","Preinit was successfull.");
     } else {
@@ -95,8 +96,34 @@ ark_stats_entity_fnc_trackEntity = {
             [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_PLAYER_HULL_GEAR_CLASS, "", _x getVariable ["hull3_gear_class", ""]] call ark_stats_ext_fnc_entityAttribute;
         };
     };
-    [ark_stats_mission_id, _entityId, POSITION_TYPE_ID_ENTITY_POSITION, getPosASL _x] call ark_stats_ext_fnc_entityPosition;
-    [ark_stats_mission_id, _entityId, EVENT_TYPE_ID_ENTITY_VEHICLE, "", typeOf vehicle _x] call ark_stats_ext_fnc_entityEvent;
+    [_unit, _entityId] call ark_stats_entity_fnc_trackPosition;
+    [_unit, _entityId] call ark_stats_entity_fnc_trackVehicle;
+};
+
+ark_stats_entity_fnc_trackPosition = {
+    FUN_ARGS_2(_unit,_entityId);
+
+    private ["_previousPosition", "_currentPosition"];
+    _previousPosition = _unit getVariable ["ark_stats_previousPosition", []];
+    _currentPosition = getPosASL _unit;
+    if (count _previousPosition == 0 || {_previousPosition distance2D _currentPosition > ark_stats_entity_positiontrackingMinDistance}) then {
+        _unit setVariable ["ark_stats_previousPosition", _currentPosition, false];
+        [ark_stats_mission_id, _entityId, POSITION_TYPE_ID_ENTITY_POSITION, _currentPosition] call ark_stats_ext_fnc_entityPosition;
+        TRACE("ark.stats.entity",FMT_5("Unit '%1' with ID '%2' has moved at least '%3' metres away from previous position '%4' to new position '%5'.",_unit,_entityId,ark_stats_entity_positiontrackingMinDistance,_previousPosition,_currentPosition));
+    };
+};
+
+ark_stats_entity_fnc_trackVehicle = {
+    FUN_ARGS_2(_unit,_entityId);
+
+    private ["_previousVehicle", "_currentVehicle"];
+    _previousVehicle = _unit getVariable ["ark_stats_previousVehicle", ""];
+    _currentVehicle = typeOf vehicle _unit;
+    if (_previousVehicle != _currentVehicle) then {
+        _unit setVariable ["ark_stats_previousVehicle", _currentVehicle, false];
+        [ark_stats_mission_id, _entityId, EVENT_TYPE_ID_ENTITY_VEHICLE, "", _currentVehicle] call ark_stats_ext_fnc_entityEvent;
+        TRACE("ark.stats.entity",FMT_4("Unit '%1' with ID '%2' has changed vehicle from '%3' to '%4'.",_unit,_entityId,_previousVehicle,_currentVehicle));
+    };
 };
 
 ark_stats_entity_fnc_killedHandler = {
