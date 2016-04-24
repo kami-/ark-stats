@@ -47,7 +47,8 @@ ark_stats_mission_fnc_connectedHandler = {
     if (ark_stats_ext_hasError) exitWith {
         DEBUG("ark.stats.mission","Connected handler skipped due to extension error.");
     };
-    [ark_stats_mission_id, EVENT_TYPE_ID_PLAYER_CONNECTED, "", ""] call ark_stats_ext_fnc_missionEvent;
+    private _charValue = [_uid, [str _name, ":", "-"] call CBA_fnc_replace];
+    [ark_stats_mission_id, EVENT_TYPE_ID_PLAYER_CONNECTED, "", _charValue] call ark_stats_ext_fnc_missionEvent;
     DEBUG("ark.stats.mission",FMT_2("Player '%1' connected with UID '%2'.",_name,_uid));
 };
 
@@ -62,7 +63,8 @@ ark_stats_mission_fnc_disconnectedHandler = {
         [ark_stats_mission_id, EVENT_TYPE_ID_PLAYER_DISCONNECTED_FROM_ENTITY, _entityId, ""] call ark_stats_ext_fnc_missionEvent;
         DEBUG("ark.stats.mission",FMT_4("Player '%1' disconnected with UID '%2' and unit '%3' with ID '%4'.",_name,_uid,_unit,_entityId));
     } else {
-        [ark_stats_mission_id, EVENT_TYPE_ID_PLAYER_DISCONNECTED, "", [str _unit, ":", "-"] call CBA_fnc_replace] call ark_stats_ext_fnc_missionEvent;
+        private _charValue = [_uid, [str _name, ":", "-"] call CBA_fnc_replace, [str _unit, ":", "-"] call CBA_fnc_replace];
+        [ark_stats_mission_id, EVENT_TYPE_ID_PLAYER_DISCONNECTED, "", _charValue] call ark_stats_ext_fnc_missionEvent;
         DEBUG("ark.stats.mission",FMT_3("Player '%1' disconnected with UID '%2' and unknown unit '%3'.",_name,_uid,_unit));
     };
 };
