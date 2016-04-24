@@ -21,6 +21,9 @@ ark_stats_mission_fnc_preInit = {
 ark_stats_mission_fnc_postInit = {
     addMissionEventHandler ["PlayerConnected", ark_stats_mission_fnc_connectedHandler];
     addMissionEventHandler ["HandleDisconnect", ark_stats_mission_fnc_disconnectedHandler];
+    if (!isNil {hull3_isEnabled} && {hull3_isEnabled}) then {
+        ["mission.safetytimer.ended", ark_stats_mission_fnc_safetyEndeddHandler] call hull3_event_fnc_addEventHandler;
+    };
     [] spawn ark_stats_mission_fnc_logEnvironment;
     DEBUG("ark.stats.mission","Postinit done.");
 };
@@ -62,4 +65,12 @@ ark_stats_mission_fnc_disconnectedHandler = {
         [ark_stats_mission_id, EVENT_TYPE_ID_PLAYER_DISCONNECTED, "", [str _unit, ":", "-"] call CBA_fnc_replace] call ark_stats_ext_fnc_missionEvent;
         DEBUG("ark.stats.mission",FMT_3("Player '%1' disconnected with UID '%2' and unknown unit '%3'.",_name,_uid,_unit));
     };
+};
+
+ark_stats_mission_fnc_safetyEndeddHandler = {
+    if (ark_stats_ext_hasError) exitWith {
+        DEBUG("ark.stats.mission","Safety Ended handler skipped due to extension error.");
+    };
+    [ark_stats_mission_id, EVENT_TYPE_ID_MISSION_SAFETY_ENDED, "", ""] call ark_stats_ext_fnc_missionEvent;
+    DEBUG("ark.stats.mission","Mission safety ended.");
 };
