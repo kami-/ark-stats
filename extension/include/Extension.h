@@ -45,8 +45,9 @@ private:
 	std::mutex sessionMutex;
 	IdGenerator idGenerator;
 	bool isConnected;
+	std::string connectionString;
 
-	void connect(const std::string& host, const std::string& port, const std::string& user, const std::string& password, const std::string& database);
+	void connect();
 	void disconnect();
 
 	spdlog::level::level_enum getLogLevel(const std::string& logLevelStr) const;

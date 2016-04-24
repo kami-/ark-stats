@@ -23,11 +23,12 @@ Extension::Extension() {
 	std::getline(file, user);
 	std::getline(file, password);
 	std::getline(file, database);
+	isConnected = false;
+	connectionString = fmt::format("host={};port={};db={};user={};password={};compress=true;auto-reconnect=true", host, port, database, user, password);
     logger = spdlog::rotating_logger_mt("ark_stats_extension", fmt::format("{}\\{}", extensionFolder, getLogFileName()), 1024 * 1024 * 20, 1, true);
     logger->set_level(getLogLevel(logLevelStr));
 	logger->info("=======================================================================");
     logger->info("Starting Ark_Stats extension version '{}'.", ARK_STATS_EXTENSION_VERSION);
-	connect(host, port, user, password, database);
 }
 
 Extension::~Extension() {
@@ -35,12 +36,11 @@ Extension::~Extension() {
     logger->info("Stopped Ark_Stats extension version '{}'.", ARK_STATS_EXTENSION_VERSION);
 }
 
-void Extension::connect(const std::string& host, const std::string& port, const std::string& user, const std::string& password, const std::string& database) {
-	logger->info("Connecting to MySQL server at host '{}' as user '{}' to database '{}'.", host, user, database);
-	isConnected = false;
+void Extension::connect() {
+	logger->info("Connecting to MySQL server.");
 	try {
 		Poco::Data::MySQL::Connector::registerConnector();
-		session = new Poco::Data::Session("MySQL", fmt::format("host={};port={};db={};user={};password={};compress=true;auto-reconnect=true", host, port, database, user, password));
+		session = new Poco::Data::Session("MySQL", connectionString);
 		isConnected = true;
 		logger->trace("Starting DB thread.");
 		dbThread = std::thread(&Extension::processRequests, this);
@@ -57,12 +57,12 @@ void Extension::connect(const std::string& host, const std::string& port, const 
 void Extension::disconnect() {
 	if (isConnected) {
 		delete session;
+		requests.push(Request(POISON_ID, ""));
+		logger->trace("Pushed poison request.");
+		dbThread.join();
+		logger->trace("DB thread joined.");
 	}
 	Poco::Data::MySQL::Connector::unregisterConnector();
-	requests.push(Request(POISON_ID, ""));
-	logger->trace("Pushed poison request.");
-	dbThread.join();
-	logger->trace("DB thread joined.");
 }
 
 spdlog::level::level_enum Extension::getLogLevel(const std::string& logLevelStr) const {
@@ -140,6 +140,9 @@ Poco::Nullable<std::string> Extension::getCharValue(const std::vector<std::strin
 }
 
 void Extension::call(char* output, int outputSize, const char* function) {
+	if (!isConnected) {
+		connect();
+	}
 	uint32_t requestId = idGenerator.next();
 	logger->trace("Pushing new reuquest.");
 	requests.push(Request(requestId, std::string(function)));
