@@ -26,7 +26,6 @@ void Extension::init() {
     logger->set_level(getLogLevel(logLevelStr));
     logger->info("=======================================================================");
     logger->info("Starting ark_stats_extension version '{}'.", ARK_STATS_EXTENSION_VERSION);
-    connect();
 }
 
 void Extension::cleanup() {
@@ -50,7 +49,7 @@ void Extension::call(char* output, int outputSize, const char* function) {
     if (!request.params.empty()) {
         request.type = request.params[0];
     }
-    if (request.type == "se" || request.type == "ve" || request.type == "mi" || request.type == "en") {
+    if (request.type == "co" || request.type == "se" || request.type == "ve" || request.type == "mi" || request.type == "en") {
         Response response;
         {
             std::lock_guard<std::mutex> lock(sessionMutex);
@@ -66,6 +65,7 @@ void Extension::call(char* output, int outputSize, const char* function) {
 
 void Extension::connect() {
     logger->info("Connecting to MySQL server at '{}@{}:{}/{}'.", user, host, port, database);
+    hasError = false;
     isConnected = false;
     try {
         Poco::Data::MySQL::Connector::registerConnector();
@@ -181,9 +181,11 @@ Response Extension::processRequest(const Request& request) {
     }
     logger->trace("[{}] Request type '{}' params '{}' and size '{}'!", request.id, request.type, ss.str(), request.params.size());
     try {
-        if (!isConnected) {
-            logger->error("[{}] Connection lost to the MySQL server!", request.id);
-            hasError = true;
+        if (request.type == "co" && realParamsSize == 0) { // connect
+            if (!isConnected) {
+                connect();
+                response.message = "\"Connected to MySQL server.\"";
+            }
         }
         else if (request.type == "se" && realParamsSize == 0) { // session
             Poco::DateTime now;
@@ -193,6 +195,10 @@ Response Extension::processRequest(const Request& request) {
         }
         else if (request.type == "ve" && realParamsSize == 0) { // version
             response.message = fmt::format("\"{}\"", ARK_STATS_EXTENSION_VERSION);
+        }
+        else if (!isConnected) {
+            logger->error("[{}] Connection lost to the MySQL server!", request.id);
+            hasError = true;
         }
         else if (request.type == "mi" && realParamsSize == 0) { // mission
             logger->debug("[{}] Inserting into 'mission'.", request.id);
