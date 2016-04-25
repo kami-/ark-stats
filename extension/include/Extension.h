@@ -1,19 +1,19 @@
 #ifndef ARK_STATS_EXTENSION_EXTENSION_H
 #define ARK_STATS_EXTENSION_EXTENSION_H
 
+#include <cstdint>
 #include <string>
-
-#include "spdlog/spdlog.h"
-#include "Queue/Queue.h"
-#include "Poco/Data/Session.h"
-#include "Poco/Data/MySQL/Connector.h"
+#include <vector>
 
 #include "IdGenerator.h"
+#include "spdlog/spdlog.h"
+#include "Queue/Queue.h"
+#include "Poco/Nullable.h"
+#include "Poco/Data/Session.h"
 
-#define ARK_STATS_EXTENSION_VERSION      "0.1.0"
+#define ARK_STATS_EXTENSION_VERSION      "0.2.0"
 
 namespace ark_stats {
-namespace extension {
 
 enum ResponseType {
 	ok = 0,
@@ -22,48 +22,52 @@ enum ResponseType {
 
 struct Request {
 	uint32_t id;
-	std::string data;
-	
-	Request(const uint32_t i, const std::string d) : id(i), data(d) {};
+	std::string type;
+	std::vector<std::string> params;
+};
+
+struct Response {
+	uint32_t id;
+	ResponseType type;
+	std::string message;
 };
 
 class Extension {
 public:
-    Extension();
-    ~Extension();
-    void call(char *output, int outputSize, const char *function);
+	void init();
+	void call(char *output, int outputSize, const char *function);
+	void cleanup();
+
 private:
-    const uint32_t POISON_ID = 0;
-	const uint32_t ERROR_ID = 1;
+	const uint32_t POISON_ID = 0;
 	const std::string SQF_DELIMITER = ":";
-	const std::string CONFIG_FILE_NAME = "config.txt";
+	const uint32_t SESSION_START_HOUR = 18;
+	const uint32_t SESSION_END_HOUR = 6;
 
 	Queue<Request> requests;
 	std::shared_ptr<spdlog::logger> logger;
 	Poco::Data::Session* session;
 	std::thread dbThread;
 	std::mutex sessionMutex;
+	std::atomic<bool> hasError = false;
 	IdGenerator idGenerator;
-	bool isConnected;
-	std::string connectionString;
+	bool isConnected = false;
+	std::string host, port, user, password, database;
 
 	void connect();
-	void disconnect();
-
-	spdlog::level::level_enum getLogLevel(const std::string& logLevelStr) const;
-	std::string getExtensionFolder() const;
-	std::string getLogFileName() const;
-	std::vector<std::string>& split(const std::string &s, const std::string& delim, std::vector<std::string>& elems) const;
-	uint32_t parseUnsigned(const std::string& str) const;
-	double parseFloat(const std::string& str) const;
-	Poco::Nullable<double> getNumericValue(const std::vector<std::string>& parameters, const size_t& idx) const;
-	Poco::Nullable<std::string> getCharValue(const std::vector<std::string>& parameters, const size_t& idx) const;
-	void respond(char* output, const uint32_t& requestId, const ResponseType& type, const std::string& response) const;
-	void processRequest(const uint32_t& requestId, const std::string& data);
+	void respond(char* output, const uint32_t& requestId, const ResponseType& type, const std::string& response);
+	spdlog::level::level_enum getLogLevel(const std::string& logLevelStr);
+	std::vector<std::string>& split(const std::string &s, const std::string& delim, std::vector<std::string> &elems);
+	std::string getExtensionFolder();
+	std::string getLogFileName();
+	uint32_t parseUnsigned(const std::string& str);
+	double parseFloat(const std::string& str);
+	Poco::Nullable<double> getNumericValue(const std::vector<std::string>& parameters, const size_t& idx);
+	Poco::Nullable<std::string> getCharValue(const std::vector<std::string>& parameters, const size_t& idx);
 	void processRequests();
+	Response processRequest(const Request& request);
 };
 
-} // namespace extension
 } // namespace ark_stats
 
 #endif // ARK_STATS_EXTENSION_EXTENSION_H
