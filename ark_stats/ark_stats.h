@@ -2,4 +2,6 @@
 
 class ArkStats {
     isEnabled = 1;
+
+    ignoreSessionCheck = 0;
 };

@@ -4,7 +4,6 @@
 #include <atomic>
 
 namespace ark_stats {
-namespace extension {
 
 class IdGenerator {
 public:
@@ -16,7 +15,6 @@ private:
     std::atomic<uint32_t> id;
 };
 
-} // namespace extension
 } // namespace ark_stats
 
 #endif // ARK_STATS_EXTENSION_ID_GENERATOR_H

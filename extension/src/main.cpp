@@ -4,7 +4,7 @@
 #include <windows.h>
 
 namespace {
-    ark_stats::extension::Extension *extension;
+    ark_stats::Extension extension;
 }
 
 //#define ARK_STATS_CONSOLE
@@ -13,11 +13,11 @@ namespace {
 BOOL APIENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
     switch (fdwReason) {
     case DLL_PROCESS_ATTACH:
-        extension = new ark_stats::extension::Extension();
+        extension.init();
         break;
 
     case DLL_PROCESS_DETACH:
-        delete extension;
+        extension.cleanup();
         break;
     }
     return true;
@@ -29,7 +29,7 @@ extern "C" {
 
 void __stdcall RVExtension(char *output, int outputSize, const char *function) {
     outputSize -= 1;
-	extension->call(output, outputSize, function);
+    extension.call(output, outputSize, function);
 };
 
 #else
@@ -41,13 +41,13 @@ int main(int argc, char* argv[]) {
     std::string line = "";
     const int outputSize = 10000;
     char *output = new char[outputSize];
-    extension = new ark_stats::extension::Extension();
-	while (line != "exit") {
-		std::getline(std::cin, line);
-		extension->call(output, outputSize, line.c_str());
-		std::cout << "ARK_STATS: " << output << std::endl;
-	}
-    delete extension;
+    extension.init();
+    while (line != "exit") {
+        std::getline(std::cin, line);
+        extension.call(output, outputSize, line.c_str());
+        std::cout << "ARK_STATS: " << output << std::endl;
+    }
+    extension.cleanup();
     return 0;
 }
 

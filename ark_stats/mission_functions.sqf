@@ -5,8 +5,17 @@
 
 
 ark_stats_mission_fnc_preInit = {
-    ark_stats_mission_trackingDelay = 1;
     ark_stats_mission_id = -1;
+    ark_stats_mission_ignoreSessionCheck = ["ignoreSessionCheck"] call ark_stats_config_fnc_getBool;
+    private _isSession = ([] call ark_stats_ext_fnc_isSession) != 0;
+    if (!_isSession && {!ark_stats_mission_ignoreSessionCheck}) exitWith {
+        INFO("ark.stats.mission","Ignoring mission as it is not playerd in session time.");
+        ark_stats_isEnabled = false;
+    };
+    [] call ark_stats_ext_fnc_connect;
+    if (ark_stats_ext_hasError) exitWith {
+        ERROR("ark.stats.mission","Preinit failed to connect to the database.");
+    };
     private _missionId = [] call ark_stats_ext_fnc_mission;
     if (!ark_stats_ext_hasError) then {
         ark_stats_mission_id = _missionId;
@@ -29,16 +38,16 @@ ark_stats_mission_fnc_postInit = {
 };
 
 ark_stats_mission_fnc_logNameAndWorld = {
-    [ark_stats_mission_id, ATTRIBUTE_TYPE_ID_MISSION_NAME, "", missionName] call ark_stats_ext_fnc_missionAttribute;
-    [ark_stats_mission_id, ATTRIBUTE_TYPE_ID_MISSION_WORLD, "", worldName] call ark_stats_ext_fnc_missionAttribute;
+    [ATTRIBUTE_TYPE_ID_MISSION_NAME, "", missionName] call ark_stats_ext_fnc_missionAttribute;
+    [ATTRIBUTE_TYPE_ID_MISSION_WORLD, "", worldName] call ark_stats_ext_fnc_missionAttribute;
 };
 
 ark_stats_mission_fnc_logEnvironment = {
     sleep 5;
-    [ark_stats_mission_id, ATTRIBUTE_TYPE_ID_MISSION_DATE, "", hull3_mission_date] call ark_stats_ext_fnc_missionAttribute;
-    [ark_stats_mission_id, ATTRIBUTE_TYPE_ID_MISSION_TIME, "", hull3_mission_timeOfDay] call ark_stats_ext_fnc_missionAttribute;
-    [ark_stats_mission_id, ATTRIBUTE_TYPE_ID_MISSION_FOG, "", hull3_mission_fog] call ark_stats_ext_fnc_missionAttribute;
-    [ark_stats_mission_id, ATTRIBUTE_TYPE_ID_MISSION_WEATHER, "", hull3_mission_weather] call ark_stats_ext_fnc_missionAttribute;
+    [ATTRIBUTE_TYPE_ID_MISSION_DATE, "", hull3_mission_date] call ark_stats_ext_fnc_missionAttribute;
+    [ATTRIBUTE_TYPE_ID_MISSION_TIME, "", hull3_mission_timeOfDay] call ark_stats_ext_fnc_missionAttribute;
+    [ATTRIBUTE_TYPE_ID_MISSION_FOG, "", hull3_mission_fog] call ark_stats_ext_fnc_missionAttribute;
+    [ATTRIBUTE_TYPE_ID_MISSION_WEATHER, "", hull3_mission_weather] call ark_stats_ext_fnc_missionAttribute;
 };
 
 ark_stats_mission_fnc_connectedHandler = {
@@ -48,7 +57,7 @@ ark_stats_mission_fnc_connectedHandler = {
         DEBUG("ark.stats.mission","Connected handler skipped due to extension error.");
     };
     private _charValue = [_uid, [str _name, ":", "-"] call CBA_fnc_replace];
-    [ark_stats_mission_id, EVENT_TYPE_ID_PLAYER_CONNECTED, "", _charValue] call ark_stats_ext_fnc_missionEvent;
+    [EVENT_TYPE_ID_PLAYER_CONNECTED, "", _charValue] call ark_stats_ext_fnc_missionEvent;
     DEBUG("ark.stats.mission",FMT_2("Player '%1' connected with UID '%2'.",_name,_uid));
 };
 
@@ -60,11 +69,11 @@ ark_stats_mission_fnc_disconnectedHandler = {
     };
     private _entityId = _unit getVariable "ark_stats_entityId";
     if (!isNil {_entityId}) then {
-        [ark_stats_mission_id, EVENT_TYPE_ID_PLAYER_DISCONNECTED_FROM_ENTITY, _entityId, ""] call ark_stats_ext_fnc_missionEvent;
+        [EVENT_TYPE_ID_PLAYER_DISCONNECTED_FROM_ENTITY, _entityId, ""] call ark_stats_ext_fnc_missionEvent;
         DEBUG("ark.stats.mission",FMT_4("Player '%1' disconnected with UID '%2' and unit '%3' with ID '%4'.",_name,_uid,_unit,_entityId));
     } else {
         private _charValue = [_uid, [str _name, ":", "-"] call CBA_fnc_replace, [str _unit, ":", "-"] call CBA_fnc_replace];
-        [ark_stats_mission_id, EVENT_TYPE_ID_PLAYER_DISCONNECTED, "", _charValue] call ark_stats_ext_fnc_missionEvent;
+        [EVENT_TYPE_ID_PLAYER_DISCONNECTED, "", _charValue] call ark_stats_ext_fnc_missionEvent;
         DEBUG("ark.stats.mission",FMT_3("Player '%1' disconnected with UID '%2' and unknown unit '%3'.",_name,_uid,_unit));
     };
 };
@@ -73,6 +82,6 @@ ark_stats_mission_fnc_safetyEndeddHandler = {
     if (ark_stats_ext_hasError) exitWith {
         DEBUG("ark.stats.mission","Safety Ended handler skipped due to extension error.");
     };
-    [ark_stats_mission_id, EVENT_TYPE_ID_MISSION_SAFETY_ENDED, "", ""] call ark_stats_ext_fnc_missionEvent;
+    [EVENT_TYPE_ID_MISSION_SAFETY_ENDED, "", ""] call ark_stats_ext_fnc_missionEvent;
     DEBUG("ark.stats.mission","Mission safety ended.");
 };
