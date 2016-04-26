@@ -49,7 +49,7 @@ void Extension::call(char* output, int outputSize, const char* function) {
     if (!request.params.empty()) {
         request.type = request.params[0];
     }
-    if (request.type == "co" || request.type == "se" || request.type == "ve" || request.type == "mi" || request.type == "en") {
+    if (request.type == "co" || request.type == "se" || request.type == "ve" || request.type == "mi") {
         Response response;
         {
             std::lock_guard<std::mutex> lock(sessionMutex);
@@ -173,7 +173,7 @@ void Extension::processRequests() {
 
 
 Response Extension::processRequest(const Request& request) {
-    Response response{ request.id, ResponseType::ok };
+    Response response{ request.id, ResponseType::ok, "\"\"" };
     auto realParamsSize = request.params.size() - 1;
     std::stringstream ss;
     for (auto p : request.params) {
@@ -192,6 +192,7 @@ Response Extension::processRequest(const Request& request) {
             bool isSessionDay = now.dayOfWeek() == Poco::DateTime::SATURDAY || now.dayOfWeek() == Poco::DateTime::SATURDAY;
             bool isSessionHour = now.hour() >= SESSION_START_HOUR || now.hour() <= SESSION_END_HOUR;
             response.message = fmt::format("{}", isSessionDay && isSessionHour);
+            logger->debug("[{}] Is session '{}'.", request.id, isSessionDay && isSessionHour);
         }
         else if (request.type == "ve" && realParamsSize == 0) { // version
             response.message = fmt::format("\"{}\"", ARK_STATS_EXTENSION_VERSION);
@@ -204,18 +205,17 @@ Response Extension::processRequest(const Request& request) {
             logger->debug("[{}] Inserting into 'mission'.", request.id);
             *session << "INSERT INTO mission(created) VALUES(UTC_TIMESTAMP())",
                 Poco::Data::Keywords::now;
-            uint32_t id = 0;
             *session << "SELECT LAST_INSERT_ID()",
-                Poco::Data::Keywords::into(id),
+                Poco::Data::Keywords::into(missionId),
                 Poco::Data::Keywords::now;
-            logger->debug("[{}] New missionId is '{}'.", request.id, id);
-            response.message = std::to_string(id);
+            logger->debug("[{}] New missionId is '{}'.", request.id, missionId);
+            response.message = std::to_string(missionId);
+            entityIds.clear();
         }
-        else if (request.type == "ma" && realParamsSize == 4) { // mission_attribute
-            uint32_t missionId = parseUnsigned(request.params[1]);
-            uint32_t attributeTypeId = parseUnsigned(request.params[2]);
-            Poco::Nullable<double> numericValue = getNumericValue(request.params, 3);
-            Poco::Nullable<std::string> charValue = getCharValue(request.params, 4);
+        else if (request.type == "ma" && realParamsSize == 3) { // mission_attribute
+            uint32_t attributeTypeId = parseUnsigned(request.params[1]);
+            Poco::Nullable<double> numericValue = getNumericValue(request.params, 2);
+            Poco::Nullable<std::string> charValue = getCharValue(request.params, 3);
             logger->debug("[{}] Inserting into 'mission_attribute' values missionId '{}', attributeTypeId '{}', numericValue '{}', charValue '{}'.", request.id, missionId, attributeTypeId, numericValue, charValue);
             *session << "INSERT INTO mission_attribute(mission_id, attribute_type_id, numeric_value, char_value) VALUES(?, ?, ?, ?)",
                 Poco::Data::Keywords::use(missionId),
@@ -224,12 +224,11 @@ Response Extension::processRequest(const Request& request) {
                 Poco::Data::Keywords::use(charValue),
                 Poco::Data::Keywords::now;
         }
-        else if (request.type == "me" && realParamsSize == 5) { // mission_event
-            uint32_t missionId = parseUnsigned(request.params[1]);
-            double gameTime = parseFloat(request.params[2]);
-            uint32_t eventTypeId = parseUnsigned(request.params[3]);
-            Poco::Nullable<double> numericValue = getNumericValue(request.params, 4);
-            Poco::Nullable<std::string> charValue = getCharValue(request.params, 5);
+        else if (request.type == "me" && realParamsSize == 4) { // mission_event
+            double gameTime = parseFloat(request.params[1]);
+            uint32_t eventTypeId = parseUnsigned(request.params[2]);
+            Poco::Nullable<double> numericValue = getNumericValue(request.params, 3);
+            Poco::Nullable<std::string> charValue = getCharValue(request.params, 4);
             logger->debug("[{}] Inserting into 'mission_event' values missionId '{}', gameTime '{}', eventTypeId '{}', numericValue '{}', charValue '{}'.", request.id, missionId, gameTime, eventTypeId, numericValue, charValue);
             *session << "INSERT INTO mission_event(mission_id, gameTime, event_type_id, numeric_value, char_value) VALUES(?, ?, ?, ?, ?)",
                 Poco::Data::Keywords::use(missionId),
@@ -240,27 +239,32 @@ Response Extension::processRequest(const Request& request) {
                 Poco::Data::Keywords::now;
         }
         else if (request.type == "en" && realParamsSize == 2) { // entity
-            uint32_t missionId = parseUnsigned(request.params[1]);
+            uint32_t gameEntityId = parseUnsigned(request.params[1]);
             double gameTime = parseFloat(request.params[2]);
-            logger->debug("[{}] Inserting into 'entity' values missionId '{}', gameTime '{}'.", request.id, missionId, gameTime);
+            logger->debug("[{}] Inserting into 'entity' values missionId '{}', gameTime '{}' for gameEntityId '{}'.", request.id, missionId, gameTime, gameEntityId);
             *session << "INSERT INTO entity(mission_id, gameTime) VALUES(?, ?)",
                 Poco::Data::Keywords::use(missionId),
                 Poco::Data::Keywords::use(gameTime),
                 Poco::Data::Keywords::now;
-            uint64_t id = 0;
+            uint64_t entityId = 0;
             *session << "SELECT LAST_INSERT_ID()",
-                Poco::Data::Keywords::into(id),
+                Poco::Data::Keywords::into(entityId),
                 Poco::Data::Keywords::now;
-            logger->debug("[{}] New entity is '{}'.", request.id, id);
-            response.message = std::to_string(id);
+            logger->debug("[{}] New entity is '{}' for game entity ID '{}'.", request.id, entityId, gameEntityId);
+            entityIds[gameEntityId] = entityId;
         }
-        else if (request.type == "ea" && realParamsSize == 5) { // entity_attribute
-            uint32_t missionId = parseUnsigned(request.params[1]);
-            uint64_t entityId = parseUnsigned(request.params[2]);
-            uint32_t attributeTypeId = parseUnsigned(request.params[3]);
-            Poco::Nullable<double> numericValue = getNumericValue(request.params, 4);
-            Poco::Nullable<std::string> charValue = getCharValue(request.params, 5);
-            logger->debug("[{}] Inserting into 'entity_attribute' values missionId '{}', entity_id '{}', attributeTypeId '{}', numericValue '{}', charValue '{}'.", request.id, missionId, entityId, attributeTypeId, numericValue, charValue);
+        else if (request.type == "ea" && realParamsSize == 4) { // entity_attribute
+            uint32_t gameEntityId = parseUnsigned(request.params[1]);
+            if (entityIds.count(gameEntityId) == 0) {
+                logger->error("[{}] Missing entityId for gameEntityId '{}'.", request.id, gameEntityId);
+                hasError = true;
+                return response;
+            }
+            uint64_t entityId = entityIds[gameEntityId];
+            uint32_t attributeTypeId = parseUnsigned(request.params[2]);
+            Poco::Nullable<double> numericValue = getNumericValue(request.params, 3);
+            Poco::Nullable<std::string> charValue = getCharValue(request.params, 4);
+            logger->debug("[{}] Inserting into 'entity_attribute' values missionId '{}', entityId '{}', attributeTypeId '{}', numericValue '{}', charValue '{}'.", request.id, missionId, entityId, attributeTypeId, numericValue, charValue);
             *session << "INSERT INTO entity_attribute(mission_id, entity_id, attribute_type_id, numeric_value, char_value) VALUES(?, ?, ?, ?, ?)",
                 Poco::Data::Keywords::use(missionId),
                 Poco::Data::Keywords::use(entityId),
@@ -269,13 +273,18 @@ Response Extension::processRequest(const Request& request) {
                 Poco::Data::Keywords::use(charValue),
                 Poco::Data::Keywords::now;
         }
-        else if (request.type == "ee" && realParamsSize == 6) { // entity_event
-            uint32_t missionId = parseUnsigned(request.params[1]);
-            uint64_t entityId = parseUnsigned(request.params[2]);
-            double gameTime = parseFloat(request.params[3]);
-            uint32_t eventTypeId = parseUnsigned(request.params[4]);
-            Poco::Nullable<double> numericValue = getNumericValue(request.params, 5);
-            Poco::Nullable<std::string> charValue = getCharValue(request.params, 6);
+        else if (request.type == "ee" && realParamsSize == 5) { // entity_event
+            uint32_t gameEntityId = parseUnsigned(request.params[1]);
+            if (entityIds.count(gameEntityId) == 0) {
+                logger->error("[{}] Missing entityId for gameEntityId '{}'.", request.id, gameEntityId);
+                hasError = true;
+                return response;
+            }
+            uint64_t entityId = entityIds[gameEntityId];
+            double gameTime = parseFloat(request.params[2]);
+            uint32_t eventTypeId = parseUnsigned(request.params[3]);
+            Poco::Nullable<double> numericValue = getNumericValue(request.params, 4);
+            Poco::Nullable<std::string> charValue = getCharValue(request.params, 5);
             logger->debug("[{}] Inserting into 'entity_event' values missionId '{}', entityId '{}', gameTime '{}', eventTypeId '{}', numericValue '{}', charValue '{}'.", request.id, missionId, entityId, gameTime, eventTypeId, numericValue, charValue);
             *session << "INSERT INTO entity_event(mission_id, entity_id, gameTime, event_type_id, numeric_value, char_value) VALUES(?, ?, ?, ?, ?, ?)",
                 Poco::Data::Keywords::use(missionId),
@@ -286,14 +295,19 @@ Response Extension::processRequest(const Request& request) {
                 Poco::Data::Keywords::use(charValue),
                 Poco::Data::Keywords::now;
         }
-        else if (request.type == "ep" && realParamsSize == 7) { // entity_position
-            uint32_t missionId = parseUnsigned(request.params[1]);
-            uint64_t entityId = parseUnsigned(request.params[2]);
-            double gameTime = parseFloat(request.params[3]);
-            uint32_t positionTypeId = parseUnsigned(request.params[4]);
-            double posX = parseFloat(request.params[5]);
-            double posY = parseFloat(request.params[6]);
-            double posZ = parseFloat(request.params[7]);
+        else if (request.type == "ep" && realParamsSize == 6) { // entity_position
+            uint32_t gameEntityId = parseUnsigned(request.params[1]);
+            if (entityIds.count(gameEntityId) == 0) {
+                logger->error("[{}] Missing entityId for gameEntityId '{}'.", request.id, gameEntityId);
+                hasError = true;
+                return response;
+            }
+            uint64_t entityId = entityIds[gameEntityId];
+            double gameTime = parseFloat(request.params[2]);
+            uint32_t positionTypeId = parseUnsigned(request.params[3]);
+            double posX = parseFloat(request.params[4]);
+            double posY = parseFloat(request.params[5]);
+            double posZ = parseFloat(request.params[6]);
             logger->debug("[{}] Inserting into 'entity_position' values missionId '{}', entityId '{}', gameTime '{}', positionTypeId '{}', posX '{}', posY '{}, posZ '{}''.", request.id, missionId, entityId, gameTime, positionTypeId, posX, posY, posZ);
             *session << "INSERT INTO entity_position(mission_id, entity_id, gameTime, position_type_id, pos_x, pos_y, pos_z) VALUES(?, ?, ?, ?, ?, ?, ?)",
                 Poco::Data::Keywords::use(missionId),

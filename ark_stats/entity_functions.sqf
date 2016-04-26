@@ -5,6 +5,8 @@
 
 
 ark_stats_entity_fnc_preInit = {
+    ark_stats_entity_lastId = 1;
+    ark_stats_entity_trackingDelay = 1;
     ark_stats_entity_positiontrackingMinDistance = 1;
     if (!ark_stats_ext_hasError) then {
         DEBUG("ark.stats.entity","Preinit was successfull.");
@@ -27,22 +29,24 @@ ark_stats_entity_fnc_trackMarkers = {
             ERROR("ark.stats.entity","Stopping marker tracking due to extension error.");
         };
         if (_x find "hull" == -1) then {
-            _entityId = [ark_stats_mission_id] call ark_stats_ext_fnc_entity;
+            private _entityId = ark_stats_entity_lastId;
+            ark_stats_entity_lastId = ark_stats_entity_lastId + 1;
+            [_entityId] call ark_stats_ext_fnc_entity;
             if (ark_stats_ext_hasError) exitWith {
-                ERROR("ark.stats.entity",FMT_1("Failed to create entity due to extension error for marker '%1'.",_x));
+                ERROR("ark.stats.entity",FMT_2("Failed to create entity due to extension error for marker '%1' with ID '%2'.",_x,_entityId));
             };
             DEBUG("ark.stats.entity",FMT_2("Created new entity from marker '%1' with ID '%2'",_x,_entityId));
-            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_MARKER_SHAPE, "", markerShape _x] call ark_stats_ext_fnc_entityAttribute;
-            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_MARKER_TYPE, "", markerType _x] call ark_stats_ext_fnc_entityAttribute;
-            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_MARKER_NAME, "", _x] call ark_stats_ext_fnc_entityAttribute;
-            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_MARKER_TEXT, "", markerText _x] call ark_stats_ext_fnc_entityAttribute;
-            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_MARKER_SIZE_A, (markerSize _x) select 0, ""] call ark_stats_ext_fnc_entityAttribute;
-            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_MARKER_SIZE_B, (markerSize _x) select 1, ""] call ark_stats_ext_fnc_entityAttribute;
-            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_MARKER_DIRECTION, markerDir _x, ""] call ark_stats_ext_fnc_entityAttribute;
-            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_MARKER_COLOR, "", markerColor _x] call ark_stats_ext_fnc_entityAttribute;
-            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_MARKER_BRUSH, "", markerBrush _x] call ark_stats_ext_fnc_entityAttribute;
-            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_MARKER_ALPHA, markerAlpha _x, ""] call ark_stats_ext_fnc_entityAttribute;
-            [ark_stats_mission_id, _entityId, POSITION_TYPE_ID_ENTITY_POSITION, markerPos _x] call ark_stats_ext_fnc_entityPosition;
+            [_entityId, ATTRIBUTE_TYPE_ID_MARKER_SHAPE, "", markerShape _x] call ark_stats_ext_fnc_entityAttribute;
+            [_entityId, ATTRIBUTE_TYPE_ID_MARKER_TYPE, "", markerType _x] call ark_stats_ext_fnc_entityAttribute;
+            [_entityId, ATTRIBUTE_TYPE_ID_MARKER_NAME, "", _x] call ark_stats_ext_fnc_entityAttribute;
+            [_entityId, ATTRIBUTE_TYPE_ID_MARKER_TEXT, "", markerText _x] call ark_stats_ext_fnc_entityAttribute;
+            [_entityId, ATTRIBUTE_TYPE_ID_MARKER_SIZE_A, (markerSize _x) select 0, ""] call ark_stats_ext_fnc_entityAttribute;
+            [_entityId, ATTRIBUTE_TYPE_ID_MARKER_SIZE_B, (markerSize _x) select 1, ""] call ark_stats_ext_fnc_entityAttribute;
+            [_entityId, ATTRIBUTE_TYPE_ID_MARKER_DIRECTION, markerDir _x, ""] call ark_stats_ext_fnc_entityAttribute;
+            [_entityId, ATTRIBUTE_TYPE_ID_MARKER_COLOR, "", markerColor _x] call ark_stats_ext_fnc_entityAttribute;
+            [_entityId, ATTRIBUTE_TYPE_ID_MARKER_BRUSH, "", markerBrush _x] call ark_stats_ext_fnc_entityAttribute;
+            [_entityId, ATTRIBUTE_TYPE_ID_MARKER_ALPHA, markerAlpha _x, ""] call ark_stats_ext_fnc_entityAttribute;
+            [_entityId, POSITION_TYPE_ID_ENTITY_POSITION, markerPos _x] call ark_stats_ext_fnc_entityPosition;
         };
     } foreach allMapMarkers;
 };
@@ -67,7 +71,7 @@ ark_stats_entity_fnc_track = {
                 };
             };
         } foreach allUnits;
-        sleep ark_stats_mission_trackingDelay;
+        sleep ark_stats_entity_trackingDelay;
     };
     ERROR("ark.stats.entity","Stopping tracking due to extension error.");
 };
@@ -77,23 +81,25 @@ ark_stats_entity_fnc_trackEntity = {
 
     private _entityId = _x getVariable "ark_stats_entityId";
     if (isNil {_entityId}) then {
-        _entityId = [ark_stats_mission_id] call ark_stats_ext_fnc_entity;
+        _entityId = ark_stats_entity_lastId;
+        ark_stats_entity_lastId = ark_stats_entity_lastId + 1;
+        [_entityId] call ark_stats_ext_fnc_entity;
         if (ark_stats_ext_hasError) exitWith {
-            ERROR("ark.stats.entity",FMT_1("Failed to create entity due to extension error for unit '%1'.",_unit));
+            ERROR("ark.stats.entity",FMT_2("Failed to create entity due to extension error for unit '%1' with ID '%2'.",_unit,_entityId));
         };
         _x setVariable ["ark_stats_entityId", _entityId, true];
         DEBUG("ark.stats.entity",FMT_2("Created new entity from unit '%1' with ID '%2'",_unit,_entityId));
-        [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_ENTITY_SIDE, "", side _x] call ark_stats_ext_fnc_entityAttribute;
+        [_entityId, ATTRIBUTE_TYPE_ID_ENTITY_SIDE, "", side _x] call ark_stats_ext_fnc_entityAttribute;
         if (isPlayer _x) then {
             DEBUG("ark.stats.entity",FMT_2("Tracking player unit '%1' with ID '%2'.",_unit,_entityId));
-            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_PLAYER_UID, "", getPlayerUID _x] call ark_stats_ext_fnc_entityAttribute;
-            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_PLAYER_NAME, "", name _x] call ark_stats_ext_fnc_entityAttribute;
-            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_PLAYER_GROUP, "", group _x] call ark_stats_ext_fnc_entityAttribute;
-            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_PLAYER_IS_JIP, "", didJIPOwner _x] call ark_stats_ext_fnc_entityAttribute;
-            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_PLAYER_HULL_FACTION, "", _x getVariable ["hull3_faction", ""]] call ark_stats_ext_fnc_entityAttribute;
-            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_PLAYER_HULL_GEAR_TEMPLATE, "", _x getVariable ["hull3_gear_template", ""]] call ark_stats_ext_fnc_entityAttribute;
-            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_PLAYER_HULL_UNIFORM_TEMPLATE, "", _x getVariable ["hull3_uniform_template", ""]] call ark_stats_ext_fnc_entityAttribute;
-            [ark_stats_mission_id, _entityId, ATTRIBUTE_TYPE_ID_PLAYER_HULL_GEAR_CLASS, "", _x getVariable ["hull3_gear_class", ""]] call ark_stats_ext_fnc_entityAttribute;
+            [_entityId, ATTRIBUTE_TYPE_ID_PLAYER_UID, "", getPlayerUID _x] call ark_stats_ext_fnc_entityAttribute;
+            [_entityId, ATTRIBUTE_TYPE_ID_PLAYER_NAME, "", name _x] call ark_stats_ext_fnc_entityAttribute;
+            [_entityId, ATTRIBUTE_TYPE_ID_PLAYER_GROUP, "", group _x] call ark_stats_ext_fnc_entityAttribute;
+            [_entityId, ATTRIBUTE_TYPE_ID_PLAYER_IS_JIP, "", didJIPOwner _x] call ark_stats_ext_fnc_entityAttribute;
+            [_entityId, ATTRIBUTE_TYPE_ID_PLAYER_HULL_FACTION, "", _x getVariable ["hull3_faction", ""]] call ark_stats_ext_fnc_entityAttribute;
+            [_entityId, ATTRIBUTE_TYPE_ID_PLAYER_HULL_GEAR_TEMPLATE, "", _x getVariable ["hull3_gear_template", ""]] call ark_stats_ext_fnc_entityAttribute;
+            [_entityId, ATTRIBUTE_TYPE_ID_PLAYER_HULL_UNIFORM_TEMPLATE, "", _x getVariable ["hull3_uniform_template", ""]] call ark_stats_ext_fnc_entityAttribute;
+            [_entityId, ATTRIBUTE_TYPE_ID_PLAYER_HULL_GEAR_CLASS, "", _x getVariable ["hull3_gear_class", ""]] call ark_stats_ext_fnc_entityAttribute;
         };
     };
     [_unit, _entityId] call ark_stats_entity_fnc_trackPosition;
@@ -108,7 +114,7 @@ ark_stats_entity_fnc_trackPosition = {
     _currentPosition = getPosASL _unit;
     if (count _previousPosition == 0 || {_previousPosition distance2D _currentPosition > ark_stats_entity_positiontrackingMinDistance}) then {
         _unit setVariable ["ark_stats_previousPosition", _currentPosition, false];
-        [ark_stats_mission_id, _entityId, POSITION_TYPE_ID_ENTITY_POSITION, _currentPosition] call ark_stats_ext_fnc_entityPosition;
+        [_entityId, POSITION_TYPE_ID_ENTITY_POSITION, _currentPosition] call ark_stats_ext_fnc_entityPosition;
         TRACE("ark.stats.entity",FMT_5("Unit '%1' with ID '%2' has moved at least '%3' metres away from previous position '%4' to new position '%5'.",_unit,_entityId,ark_stats_entity_positiontrackingMinDistance,_previousPosition,_currentPosition));
     };
 };
@@ -121,7 +127,7 @@ ark_stats_entity_fnc_trackVehicle = {
     _currentVehicle = typeOf vehicle _unit;
     if (_previousVehicle != _currentVehicle) then {
         _unit setVariable ["ark_stats_previousVehicle", _currentVehicle, false];
-        [ark_stats_mission_id, _entityId, EVENT_TYPE_ID_ENTITY_VEHICLE, "", _currentVehicle] call ark_stats_ext_fnc_entityEvent;
+        [_entityId, EVENT_TYPE_ID_ENTITY_VEHICLE, "", _currentVehicle] call ark_stats_ext_fnc_entityEvent;
         TRACE("ark.stats.entity",FMT_4("Unit '%1' with ID '%2' has changed vehicle from '%3' to '%4'.",_unit,_entityId,_previousVehicle,_currentVehicle));
     };
 };
@@ -139,10 +145,10 @@ ark_stats_entity_fnc_killedHandler = {
         DEBUG("ark.stats.entity",FMT_1("Killed handler skipped. Killed unit '%1' is not tracked.",_killed));
     };
     if (!isNil {_killerEntityId}) then {
-        [ark_stats_mission_id, _killedEntityId, EVENT_TYPE_ID_ENTITY_KILLED_BY_ENTITY, _killerEntityId, ""] call ark_stats_ext_fnc_entityEvent;
+        [_killedEntityId, EVENT_TYPE_ID_ENTITY_KILLED_BY_ENTITY, _killerEntityId, ""] call ark_stats_ext_fnc_entityEvent;
         DEBUG("ark.stats.entity",FMT_4("Entity '%1' with ID '%2' was killed by entity '%3' with ID '%4'.",_killed,_killedEntityId,_killer,_killerEntityId));
     } else {
-        [ark_stats_mission_id, _killedEntityId, EVENT_TYPE_ID_ENTITY_KILLED_BY_UNKNOWN, "", [str _killer, ":", "-"] call CBA_fnc_replace] call ark_stats_ext_fnc_entityEvent;
+        [_killedEntityId, EVENT_TYPE_ID_ENTITY_KILLED_BY_UNKNOWN, "", [str _killer, ":", "-"] call CBA_fnc_replace] call ark_stats_ext_fnc_entityEvent;
         DEBUG("ark.stats.entity",FMT_3("Entity '%1' with ID '%2' was killed by unknown entity '%3'.",_killed,_killedEntityId,_killer));
     };
 };

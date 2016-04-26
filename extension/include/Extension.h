@@ -45,6 +45,8 @@ private:
     const uint32_t SESSION_END_HOUR = 6;
 
     Queue<Request> requests;
+    uint32_t missionId;
+    std::map<uint32_t, uint64_t> entityIds;
     std::shared_ptr<spdlog::logger> logger;
     Poco::Data::Session* session;
     std::thread dbThread;

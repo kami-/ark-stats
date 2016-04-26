@@ -3,7 +3,7 @@
 
 #include "\userconfig\ark_stats\log\global.h"
 
-#define ARK_STATS_VERSION               "0.1.0"
+#define ARK_STATS_VERSION               "0.2.0"
 
 #define CONCAT_ADDON_PATH(FILE)         x\ark\addons\ark_stats\FILE
 #define ADDON_PATH(FILE)                #CONCAT_ADDON_PATH(FILE)
@@ -28,6 +28,8 @@
 
 
 // Extension call type IDs
+#define CALL_TYPE_ID_CONNECT                                        "co"
+#define CALL_TYPE_ID_IS_SESSION                                     "se"
 #define CALL_TYPE_ID_VERSION                                        "ve"
 #define CALL_TYPE_ID_MISSION                                        "mi"
 #define CALL_TYPE_ID_MISSION_ATTRIBUTE                              "ma"
