@@ -19,6 +19,17 @@ ark_stats_ext_fnc_checkError = {
     };
 };
 
+ark_stats_ext_fnc_version = {
+    private ["_request", "_result"];
+    _request = format ["%1", CALL_TYPE_ID_VERSION];
+    DEBUG("ark.stats.ext",FMT_1("Calling extension 'version' command with request '%1'.",_request));
+    _result = call compile (EXTENSION_NAME callExtension _request);
+    DEBUG("ark.stats.ext",FMT_1("Extension 'version' command result was '%1'.",_result));
+    [_result] call ark_stats_ext_fnc_checkError;
+
+    _result select RESULT_DATA_IDX;
+};
+
 ark_stats_ext_fnc_connect = {
     private ["_request", "_result"];
     _request = format ["%1", CALL_TYPE_ID_CONNECT];

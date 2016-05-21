@@ -3,7 +3,7 @@
 
 #include "\userconfig\ark_stats\log\global.h"
 
-#define ARK_STATS_VERSION               "0.2.0"
+#define ARK_STATS_VERSION               "0.3.0"
 
 #define CONCAT_ADDON_PATH(FILE)         x\ark\addons\ark_stats\FILE
 #define ADDON_PATH(FILE)                #CONCAT_ADDON_PATH(FILE)
@@ -70,6 +70,8 @@
 #define ATTRIBUTE_TYPE_ID_MARKER_BRUSH                              24
 #define ATTRIBUTE_TYPE_ID_MARKER_ALPHA                              25
 
+#define ATTRIBUTE_TYPE_ID_AI_GROUP                                  26
+#define ATTRIBUTE_TYPE_ID_AI_GROUP_ALIVE_COUNT                      27
 
 // Event type IDs
 #define EVENT_TYPE_ID_MISSION_SAFETY_ENDED                          1
@@ -86,7 +88,7 @@
 // Position type IDs
 #define POSITION_TYPE_ID_ENTITY_POSITION                            1
 
-#define POSITION_TYPE_ID_AI_POSITION                                2
+#define POSITION_TYPE_ID_AI_WAYPOINT_POSITION                       2
 
 
 
