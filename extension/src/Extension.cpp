@@ -189,10 +189,12 @@ Response Extension::processRequest(const Request& request) {
         }
         else if (request.type == "se" && realParamsSize == 0) { // session
             Poco::DateTime now;
-            bool isSessionDay = now.dayOfWeek() == Poco::DateTime::SATURDAY || now.dayOfWeek() == Poco::DateTime::SATURDAY;
-            bool isSessionHour = now.hour() >= SESSION_START_HOUR || now.hour() <= SESSION_END_HOUR;
-            response.message = fmt::format("{}", isSessionDay && isSessionHour);
-            logger->debug("[{}] Is session '{}'.", request.id, isSessionDay && isSessionHour);
+            bool isSaturdaySession = (now.dayOfWeek() == Poco::DateTime::SATURDAY && now.hour() >= SESSION_START_HOUR)
+                || (now.dayOfWeek() == Poco::DateTime::SUNDAY && now.hour() <= SESSION_END_HOUR);
+            bool isSundaySession = (now.dayOfWeek() == Poco::DateTime::SUNDAY && now.hour() >= SESSION_START_HOUR)
+                || (now.dayOfWeek() == Poco::DateTime::MONDAY && now.hour() <= SESSION_END_HOUR);
+            response.message = fmt::format("{}", isSaturdaySession || isSundaySession);
+            logger->info("[{}] Is Saturday session '{}', is Sunday session '{}'.", request.id, isSaturdaySession, isSundaySession);
         }
         else if (request.type == "ve" && realParamsSize == 0) { // version
             response.message = fmt::format("\"{}\"", ARK_STATS_EXTENSION_VERSION);
