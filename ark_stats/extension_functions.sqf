@@ -80,7 +80,7 @@ ark_stats_ext_fnc_missionEvent = {
     FUN_ARGS_3(_eventTypeId,_numericValue,_charValue);
 
     private ["_request", "_result"];
-    _request = format ["%1:%2:%3:%4:%5", CALL_TYPE_ID_MISSION_EVENT, diag_tickTime, _eventTypeId, _numericValue, _charValue];
+    _request = format ["%1:%2:%3:%4:%5", CALL_TYPE_ID_MISSION_EVENT, time, _eventTypeId, _numericValue, _charValue];
     DEBUG("ark.stats.ext",FMT_1("Calling extension 'mission_event' command with request '%1'.",_request));
     _result = call compile (EXTENSION_NAME callExtension _request);
     DEBUG("ark.stats.ext",FMT_1("Extension 'mission_event' command result was '%1'.",_result));
@@ -93,7 +93,7 @@ ark_stats_ext_fnc_entity = {
     FUN_ARGS_1(_entityId);
 
     private ["_request", "_result"];
-    _request = format ["%1:%2:%3", CALL_TYPE_ID_ENTITY, _entityId, diag_tickTime];
+    _request = format ["%1:%2:%3", CALL_TYPE_ID_ENTITY, _entityId, time];
     DEBUG("ark.stats.ext",FMT_1("Calling extension 'entity' command with request '%1'.",_request));
     _result = call compile (EXTENSION_NAME callExtension _request);
     DEBUG("ark.stats.ext",FMT_1("Extension 'entity' command result was '%1'.",_result));
@@ -119,7 +119,7 @@ ark_stats_ext_fnc_entityEvent = {
     FUN_ARGS_4(_entityId,_eventTypeId,_numericValue,_charValue);
 
     private ["_request", "_result"];
-    _request = format ["%1:%2:%3:%4:%5:%6", CALL_TYPE_ID_ENTITY_EVENT, _entityId, diag_tickTime, _eventTypeId, _numericValue, _charValue];
+    _request = format ["%1:%2:%3:%4:%5:%6", CALL_TYPE_ID_ENTITY_EVENT, _entityId, time, _eventTypeId, _numericValue, _charValue];
     DEBUG("ark.stats.ext",FMT_1("Calling extension 'entity_event' command with request '%1'.",_request));
     _result = call compile (EXTENSION_NAME callExtension _request);
     DEBUG("ark.stats.ext",FMT_1("Extension 'entity_event' command result was '%1'.",_result));
@@ -132,7 +132,7 @@ ark_stats_ext_fnc_entityPosition = {
     FUN_ARGS_3(_entityId,_positionTypeId,_position);
 
     private ["_request", "_result"];
-    _request = format ["%1:%2:%3:%4:%5:%6:%7", CALL_TYPE_ID_ENTITY_POSITION, _entityId, diag_tickTime, _positionTypeId, _position select 0, _position select 1, _position select 2];
+    _request = format ["%1:%2:%3:%4:%5:%6:%7", CALL_TYPE_ID_ENTITY_POSITION, _entityId, time, _positionTypeId, _position select 0, _position select 1, _position select 2];
     DEBUG("ark.stats.ext",FMT_1("Calling extension 'entity_position' command with request '%1'.",_request));
     _result = call compile (EXTENSION_NAME callExtension _request);
     DEBUG("ark.stats.ext",FMT_1("Extension 'entity_position' command result was '%1'.",_result));
