@@ -197,7 +197,7 @@ INSERT INTO position_type(id, position_name) VALUES(@position_type_id, @position
 
 
 CREATE TABLE IF NOT EXISTS transformed_mission (
-    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    id BIGINT UNSIGNED NOT NULL,
     created VARCHAR(50) NOT NULL,
     name VARCHAR(1000),
     world VARCHAR(1000),
