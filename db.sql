@@ -192,3 +192,49 @@ INSERT INTO position_type(id, position_name) VALUES(@position_type_id, @position
 
 SET @position_type_id = @position_type_id + 1; SET @position_name = 'ai.waypoint_position';
 INSERT INTO position_type(id, position_name) VALUES(@position_type_id, @position_name) ON DUPLICATE KEY UPDATE position_name = @position_name;
+
+
+
+
+CREATE TABLE IF NOT EXISTS transformed_mission (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    created VARCHAR(50) NOT NULL,
+    name VARCHAR(1000),
+    world VARCHAR(1000),
+    date VARCHAR(1000),
+    time VARCHAR(1000),
+    duration DOUBLE,
+    fog VARCHAR(1000),
+    weather VARCHAR(1000),
+    char_value INT UNSIGNED NOT NULL,
+
+    PRIMARY KEY (id)
+) ENGINE = InnoDB;
+
+CREATE PROCEDURE transform_missions()
+    INSERT INTO transformed_mission SELECT
+        m.id as id
+        , DATE_FORMAT(m.created, '%Y-%m-%d %k:%i:%s') AS created
+        , name.char_value AS name
+        , world.char_value AS world
+        , date.char_value AS date
+        , time.char_value AS time
+        , (SELECT MAX(ep.gameTime) FROM entity_position ep WHERE ep.mission_id = m.id) AS duration
+        , fog.char_value AS fog
+        , weather.char_value AS weather
+        , (SELECT COUNT(DISTINCT ea.char_value) FROM entity_attribute ea WHERE ea.mission_id = m.id AND ea.attribute_type_id = 9) AS actual_players
+    FROM mission m
+    LEFT JOIN mission_attribute name ON m.id = name.mission_id AND name.attribute_type_id = 1
+    LEFT JOIN mission_attribute world ON m.id = world.mission_id AND world.attribute_type_id = 2
+    LEFT JOIN mission_attribute date ON m.id = date.mission_id AND date.attribute_type_id = 3
+    LEFT JOIN mission_attribute time ON m.id = time.mission_id AND time.attribute_type_id = 4
+    LEFT JOIN mission_attribute fog ON m.id = fog.mission_id AND fog.attribute_type_id = 5
+    LEFT JOIN mission_attribute weather ON m.id = weather.mission_id AND weather.attribute_type_id = 6
+    WHERE m.id NOT IN (SELECT id FROM transformed_mission)
+    ORDER BY m.created DESC;
+
+CREATE EVENT IF NOT EXISTS transform_missions
+ON SCHEDULE EVERY 1 WEEK
+    STARTS TIMESTAMP(DATE(NOW() + INTERVAL 7 - WEEKDAY(NOW()) DAY), '00:00:00')
+DO
+    CALL transform_missions();
