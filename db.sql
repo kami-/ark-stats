@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS mission_attribute (
     mission_id INT UNSIGNED NOT NULL,
     attribute_type_id INT UNSIGNED NOT NULL,
     numeric_value DOUBLE,
-    char_value VARCHAR(10000),
+    char_value VARCHAR(1000),
 
     PRIMARY KEY (id)
 ) ENGINE = InnoDB;
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS mission_event (
     gameTime DOUBLE UNSIGNED NOT NULL,
     event_type_id INT UNSIGNED NOT NULL,
     numeric_value DOUBLE,
-    char_value VARCHAR(10000),
+    char_value VARCHAR(1000),
 
     PRIMARY KEY (id)
 ) ENGINE = InnoDB;
@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS entity_attribute (
     entity_id INT UNSIGNED NOT NULL,
     attribute_type_id INT UNSIGNED NOT NULL,
     numeric_value DOUBLE,
-    char_value VARCHAR(10000),
+    char_value VARCHAR(1000),
 
     PRIMARY KEY (id)
 ) ENGINE = InnoDB;
@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS entity_event (
     gameTime DOUBLE UNSIGNED NOT NULL,
     event_type_id INT UNSIGNED NOT NULL,
     numeric_value DOUBLE,
-    char_value VARCHAR(10000),
+    char_value VARCHAR(1000),
 
     PRIMARY KEY (id)
 ) ENGINE = InnoDB;
@@ -77,21 +77,21 @@ CREATE TABLE IF NOT EXISTS entity_position (
 
 CREATE TABLE IF NOT EXISTS attribute_type (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    attribute_name VARCHAR(10000) NOT NULL,
+    attribute_name VARCHAR(1000) NOT NULL,
 
     PRIMARY KEY (id)
 ) ENGINE = InnoDB;
 
 CREATE TABLE IF NOT EXISTS event_type (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    event_name VARCHAR(10000) NOT NULL,
+    event_name VARCHAR(1000) NOT NULL,
 
     PRIMARY KEY (id)
 ) ENGINE = InnoDB;
 
 CREATE TABLE IF NOT EXISTS position_type (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    position_name VARCHAR(10000) NOT NULL,
+    position_name VARCHAR(1000) NOT NULL,
 
     PRIMARY KEY (id)
 ) ENGINE = InnoDB;
