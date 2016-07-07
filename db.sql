@@ -206,7 +206,6 @@ CREATE TABLE IF NOT EXISTS transformed_mission (
     duration DOUBLE,
     fog VARCHAR(1000),
     weather VARCHAR(1000),
-    char_value INT UNSIGNED NOT NULL,
 
     PRIMARY KEY (id)
 ) ENGINE = InnoDB;
