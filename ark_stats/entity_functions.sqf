@@ -143,7 +143,7 @@ ark_stats_entity_fnc_trackAiGroup = {
         DEBUG("ark.stats.entity.group",FMT_2("Created new entity from group '%1' with ID '%2'",_group,_entityId));
         [_entityId, ATTRIBUTE_TYPE_ID_ENTITY_SIDE, "", side _group] call ark_stats_ext_fnc_entityAttribute;
         [_entityId, ATTRIBUTE_TYPE_ID_AI_GROUP, "", _group] call ark_stats_ext_fnc_entityAttribute;
-        [_entityId, ATTRIBUTE_TYPE_ID_AI_GROUP_ALIVE_COUNT, "", _aliveCount] call ark_stats_ext_fnc_entityAttribute;
+        [_entityId, ATTRIBUTE_TYPE_ID_AI_GROUP_ALIVE_COUNT, _aliveCount, ""] call ark_stats_ext_fnc_entityAttribute;
     };
     [_leader, _entityId] call ark_stats_entity_fnc_trackPosition;
     [_leader, _entityId] call ark_stats_entity_fnc_trackVehicle;
