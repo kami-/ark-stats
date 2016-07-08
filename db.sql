@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS mission_attribute (
 
     PRIMARY KEY (id)
 ) ENGINE = InnoDB;
+ALTER TABLE mission_attribute ADD INDEX (mission_id);
 
 CREATE TABLE IF NOT EXISTS mission_event (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -49,6 +50,7 @@ CREATE TABLE IF NOT EXISTS entity_attribute (
 
     PRIMARY KEY (id)
 ) ENGINE = InnoDB;
+ALTER TABLE entity_attribute ADD INDEX (entity_id);
 
 CREATE TABLE IF NOT EXISTS entity_event (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -61,6 +63,8 @@ CREATE TABLE IF NOT EXISTS entity_event (
 
     PRIMARY KEY (id)
 ) ENGINE = InnoDB;
+ALTER TABLE entity_attribute ADD INDEX (mission_id);
+ALTER TABLE entity_attribute ADD INDEX (entity_id);
 
 CREATE TABLE IF NOT EXISTS entity_position (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -212,7 +216,7 @@ CREATE TABLE IF NOT EXISTS transformed_mission (
 
 CREATE PROCEDURE transform_missions()
     INSERT INTO transformed_mission SELECT
-        m.id as id
+        m.id AS id
         , DATE_FORMAT(m.created, '%Y-%m-%d %k:%i:%s') AS created
         , name.char_value AS name
         , world.char_value AS world
