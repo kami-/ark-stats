@@ -252,7 +252,7 @@ CREATE TABLE IF NOT EXISTS transformed_player (
     side VARCHAR(50),
     uid VARCHAR(50),
     name VARCHAR(1000),
-    group VARCHAR(1000),
+    group_name VARCHAR(1000),
     is_jip BOOLEAN,
     hull_faction VARCHAR(1000),
     hull_gear_template VARCHAR(1000),
