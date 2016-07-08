@@ -140,7 +140,13 @@ ark_stats_entity_fnc_trackAiGroup = {
             ERROR("ark.stats.entity.group",FMT_2("Failed to create group entity due to extension error for group '%1' with ID '%2'.",_group,_entityId));
         };
         _group setVariable ["ark_stats_entityId", _entityId, true];
-        DEBUG("ark.stats.entity.group",FMT_2("Created new entity from group '%1' with ID '%2'",_group,_entityId));
+        DEBUG("ark.stats.entity.group",FMT_2("Created new entity from group '%1' with ID '%2'.",_group,_entityId));
+        {
+            if (!(_x in playableUnits) && {isNil {_x getVariable "ark_stats_entityId"}}) then {
+                _x setVariable ["ark_stats_entityId", _entityId, true];
+                DEBUG("ark.stats.entity.group",FMT_3("Unit '%1' from group '%2' was given group enitity ID '%3'.",_x,_group,_entityId));
+            };
+        } foreach units _group;
         [_entityId, ATTRIBUTE_TYPE_ID_ENTITY_SIDE, "", side _group] call ark_stats_ext_fnc_entityAttribute;
         [_entityId, ATTRIBUTE_TYPE_ID_AI_GROUP, "", _group] call ark_stats_ext_fnc_entityAttribute;
         [_entityId, ATTRIBUTE_TYPE_ID_AI_GROUP_ALIVE_COUNT, _aliveCount, ""] call ark_stats_ext_fnc_entityAttribute;
