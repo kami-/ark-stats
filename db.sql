@@ -241,3 +241,61 @@ ON SCHEDULE EVERY 1 WEEK
     STARTS TIMESTAMP(DATE(NOW() + INTERVAL 7 - WEEKDAY(NOW()) DAY), '00:00:00')
 DO
     CALL transform_missions();
+
+
+
+
+CREATE TABLE IF NOT EXISTS transformed_player (
+    id BIGINT UNSIGNED NOT NULL
+    mission_id INT UNSIGNED NOT NULL,
+    gameTime DOUBLE UNSIGNED NOT NULL,
+    side VARCHAR(50),
+    uid VARCHAR(50),
+    name VARCHAR(1000),
+    group VARCHAR(1000),
+    is_jip BOOLEAN,
+    hull_faction VARCHAR(1000),
+    hull_gear_template VARCHAR(1000),
+    hull_uniform_template VARCHAR(1000),
+    hull_gear_class VARCHAR(1000),
+    kill_count INT UNSIGNED NOT NULL,
+
+    PRIMARY KEY (id)
+) ENGINE = InnoDB;
+
+CREATE PROCEDURE transform_players()
+    INSERT INTO transformed_player SELECT
+        e.id AS id
+        , e.mission_id AS mission_id
+        , e.gameTime AS gameTime
+        , side.char_value AS side
+        , uid.char_value AS uid
+        , name.char_value AS name
+        , group_name.char_value AS group_name
+        , CASE is_jip.char_value
+            WHEN 'true' THEN 1
+            ELSE 0
+          END CASE AS is_jip
+        , hull_faction.char_value AS hull_faction
+        , hull_gear_template.char_value AS hull_gear_template
+        , hull_uniform_template.char_value AS hull_uniform_template
+        , hull_gear_class.char_value AS hull_gear_class
+        , (SELECT COUNT(ee.id) FROM entity_event ee WHERE ee.mission_id = e.mission_id AND ee.event_type_id = 2 AND ee.numeric_value = e.id) AS kill_count
+    FROM entity e
+    LEFT JOIN entity_attribute side ON e.id = side.entity_id AND side.attribute_type_id = 7
+    LEFT JOIN entity_attribute uid ON e.id = uid.entity_id AND uid.attribute_type_id = 8
+    LEFT JOIN entity_attribute name ON e.id = name.entity_id AND name.attribute_type_id = 9
+    LEFT JOIN entity_attribute group_name ON e.id = group_name.entity_id AND group_name.attribute_type_id = 10
+    LEFT JOIN entity_attribute is_jip ON e.id = is_jip.entity_id AND is_jip.attribute_type_id = 11
+    LEFT JOIN entity_attribute hull_faction ON e.id = hull_faction.entity_id AND hull_faction.attribute_type_id = 12
+    LEFT JOIN entity_attribute hull_gear_template ON e.id = hull_gear_template.entity_id AND hull_gear_template.attribute_type_id = 13
+    LEFT JOIN entity_attribute hull_uniform_template ON e.id = hull_uniform_template.entity_id AND hull_uniform_template.attribute_type_id = 14
+    LEFT JOIN entity_attribute hull_gear_class ON e.id = hull_gear_class.entity_id AND hull_gear_class.attribute_type_id = 15
+    WHERE e.id NOT IN (SELECT id FROM transformed_player)
+    ORDER BY e.gameTime, name.char_value DESC;
+
+CREATE EVENT IF NOT EXISTS transform_players
+ON SCHEDULE EVERY 1 WEEK
+    STARTS TIMESTAMP(DATE(NOW() + INTERVAL 7 - WEEKDAY(NOW()) DAY), '00:00:00')
+DO
+    CALL transform_players();
