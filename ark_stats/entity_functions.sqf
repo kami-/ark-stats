@@ -121,8 +121,8 @@ ark_stats_entity_fnc_trackAiGroups = {
         private ["_group", "_aliveCount", "_leader"];
         _group = _x;
         _leader = leader _group;
-        _aliveCount = { alive _x } count units _group > 0;
-        if (!isNull _x && {_aliveCount} && {!(_leader in playableUnits)}) then {
+        _aliveCount = { alive _x } count units _group;
+        if (!isNull _x && {_aliveCount > 0} && {!(_leader in playableUnits)}) then {
             DEBUG("ark.stats.entity.group",FMT_2("AI Group '%1' has '%2' alive units.",_x,_aliveCount));
             [_group, _leader, _aliveCount] call ark_stats_entity_fnc_trackAiGroup;
         };
