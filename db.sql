@@ -213,6 +213,8 @@ CREATE TABLE IF NOT EXISTS transformed_mission (
     duration DOUBLE,
     fog VARCHAR(1000),
     weather VARCHAR(1000),
+    actual_players INT UNSIGNED NOT NULL,
+    safety_ended DOUBLE UNSIGNED,
 
     PRIMARY KEY (id)
 ) ENGINE = InnoDB;
@@ -229,6 +231,7 @@ CREATE PROCEDURE transform_missions()
         , fog.char_value AS fog
         , weather.char_value AS weather
         , (SELECT COUNT(DISTINCT ea.char_value) FROM entity_attribute ea WHERE ea.mission_id = m.id AND ea.attribute_type_id = 9) AS actual_players
+        , safety_ended.gameTime AS safety_ended
     FROM mission m
     LEFT JOIN mission_attribute name ON m.id = name.mission_id AND name.attribute_type_id = 1
     LEFT JOIN mission_attribute world ON m.id = world.mission_id AND world.attribute_type_id = 2
@@ -236,14 +239,8 @@ CREATE PROCEDURE transform_missions()
     LEFT JOIN mission_attribute time ON m.id = time.mission_id AND time.attribute_type_id = 4
     LEFT JOIN mission_attribute fog ON m.id = fog.mission_id AND fog.attribute_type_id = 5
     LEFT JOIN mission_attribute weather ON m.id = weather.mission_id AND weather.attribute_type_id = 6
-    WHERE m.id NOT IN (SELECT id FROM transformed_mission)
-    ORDER BY m.created DESC;
-
-CREATE EVENT IF NOT EXISTS transform_missions
-ON SCHEDULE EVERY 1 WEEK
-    STARTS TIMESTAMP(DATE(NOW() + INTERVAL 7 - WEEKDAY(NOW()) DAY), '00:00:00')
-DO
-    CALL transform_missions();
+    LEFT JOIN mission_event safety_ended ON m.id = safety_ended.mission_id AND safety_ended.event_type_id = 1
+    WHERE m.id NOT IN (SELECT id FROM transformed_mission);
 
 
 
@@ -252,6 +249,7 @@ CREATE TABLE IF NOT EXISTS transformed_player (
     id BIGINT UNSIGNED NOT NULL,
     mission_id INT UNSIGNED NOT NULL,
     gameTime DOUBLE UNSIGNED NOT NULL,
+    game_id INT UNSIGNED NOT NULL,
     side VARCHAR(50),
     uid VARCHAR(50),
     name VARCHAR(1000),
@@ -271,6 +269,7 @@ CREATE PROCEDURE transform_players()
         e.id AS id
         , e.mission_id AS mission_id
         , e.gameTime AS gameTime
+        , game_id.numeric_value AS game_id
         , side.char_value AS side
         , uid.char_value AS uid
         , name.char_value AS name
@@ -278,13 +277,14 @@ CREATE PROCEDURE transform_players()
         , CASE is_jip.char_value
             WHEN 'true' THEN 1
             ELSE 0
-          END CASE AS is_jip
+          END AS is_jip
         , hull_faction.char_value AS hull_faction
         , hull_gear_template.char_value AS hull_gear_template
         , hull_uniform_template.char_value AS hull_uniform_template
         , hull_gear_class.char_value AS hull_gear_class
-        , (SELECT COUNT(ee.id) FROM entity_event ee WHERE ee.mission_id = e.mission_id AND ee.event_type_id = 2 AND ee.numeric_value = e.id) AS kill_count
+        , (SELECT COUNT(ee.id) FROM entity_event ee WHERE ee.mission_id = e.mission_id AND ee.event_type_id = 2 AND ee.numeric_value = game_id.numeric_value) AS kill_count
     FROM entity e
+    LEFT JOIN entity_attribute game_id ON e.id = game_id.entity_id AND game_id.attribute_type_id = 28
     LEFT JOIN entity_attribute side ON e.id = side.entity_id AND side.attribute_type_id = 7
     LEFT JOIN entity_attribute uid ON e.id = uid.entity_id AND uid.attribute_type_id = 8
     LEFT JOIN entity_attribute name ON e.id = name.entity_id AND name.attribute_type_id = 9
@@ -294,11 +294,105 @@ CREATE PROCEDURE transform_players()
     LEFT JOIN entity_attribute hull_gear_template ON e.id = hull_gear_template.entity_id AND hull_gear_template.attribute_type_id = 13
     LEFT JOIN entity_attribute hull_uniform_template ON e.id = hull_uniform_template.entity_id AND hull_uniform_template.attribute_type_id = 14
     LEFT JOIN entity_attribute hull_gear_class ON e.id = hull_gear_class.entity_id AND hull_gear_class.attribute_type_id = 15
-    WHERE e.id NOT IN (SELECT id FROM transformed_player)
-    ORDER BY e.gameTime, name.char_value DESC;
+    WHERE name.char_value IS NOT NULL
+        AND e.id NOT IN (SELECT id FROM transformed_player);
 
-CREATE EVENT IF NOT EXISTS transform_players
+
+
+
+CREATE TABLE IF NOT EXISTS transformed_marker (
+    id BIGINT UNSIGNED NOT NULL,
+    mission_id INT UNSIGNED NOT NULL,
+    gameTime DOUBLE UNSIGNED NOT NULL,
+    game_id INT UNSIGNED NOT NULL,
+    shape VARCHAR(50),
+    type VARCHAR(100),
+    name VARCHAR(1000),
+    text VARCHAR(1000),
+    size_a DOUBLE,
+    size_b DOUBLE,
+    direction DOUBLE,
+    color VARCHAR(100),
+    brush VARCHAR(100),
+    alpha DOUBLE,
+
+    PRIMARY KEY (id)
+) ENGINE = InnoDB;
+
+CREATE PROCEDURE transform_markers()
+    INSERT INTO transformed_marker SELECT
+        e.id AS id
+        , e.mission_id AS mission_id
+        , e.gameTime AS gameTime
+        , game_id.numeric_value AS game_id
+        , shape.char_value AS shape
+        , type.char_value AS type
+        , name.char_value AS name
+        , text.char_value AS text
+        , size_a.char_value AS size_a
+        , size_b.char_value AS size_b
+        , direction.char_value AS direction
+        , color.char_value AS color
+        , brush.char_value AS brush
+        , alpha.char_value AS alpha
+    FROM entity e
+    LEFT JOIN entity_attribute game_id ON e.id = game_id.entity_id AND game_id.attribute_type_id = 28
+    LEFT JOIN entity_attribute shape ON e.id = shape.entity_id AND shape.attribute_type_id = 16
+    LEFT JOIN entity_attribute type ON e.id = type.entity_id AND type.attribute_type_id = 17
+    LEFT JOIN entity_attribute name ON e.id = name.entity_id AND name.attribute_type_id = 18
+    LEFT JOIN entity_attribute text ON e.id = text.entity_id AND text.attribute_type_id = 19
+    LEFT JOIN entity_attribute size_a ON e.id = size_a.entity_id AND size_a.attribute_type_id = 20
+    LEFT JOIN entity_attribute size_b ON e.id = size_b.entity_id AND size_b.attribute_type_id = 21
+    LEFT JOIN entity_attribute direction ON e.id = direction.entity_id AND direction.attribute_type_id = 22
+    LEFT JOIN entity_attribute color ON e.id = color.entity_id AND color.attribute_type_id = 23
+    LEFT JOIN entity_attribute brush ON e.id = brush.entity_id AND brush.attribute_type_id = 24
+    LEFT JOIN entity_attribute alpha ON e.id = alpha.entity_id AND alpha.attribute_type_id = 25
+    WHERE name.char_value IS NOT NULL
+        AND e.id NOT IN (SELECT id FROM transformed_marker);
+
+
+
+
+CREATE TABLE IF NOT EXISTS transformed_ai (
+    id BIGINT UNSIGNED NOT NULL,
+    mission_id INT UNSIGNED NOT NULL,
+    gameTime DOUBLE UNSIGNED NOT NULL,
+    game_id INT UNSIGNED NOT NULL,
+    side VARCHAR(50),
+    group_name VARCHAR(1000),
+    alive_count INT UNSIGNED NOT NULL,
+
+    PRIMARY KEY (id)
+) ENGINE = InnoDB;
+
+CREATE PROCEDURE transform_ais()
+    INSERT INTO transformed_ai SELECT
+        e.id AS id
+        , e.mission_id AS mission_id
+        , e.gameTime AS gameTime
+        , game_id.numeric_value AS game_id
+        , side.char_value AS side
+        , group_name.char_value AS group_name
+        , alive_count.numeric_value AS alive_count
+    FROM entity e
+    LEFT JOIN entity_attribute game_id ON e.id = game_id.entity_id AND game_id.attribute_type_id = 28
+    LEFT JOIN entity_attribute side ON e.id = side.entity_id AND side.attribute_type_id = 7
+    LEFT JOIN entity_attribute group_name ON e.id = group_name.entity_id AND group_name.attribute_type_id = 26
+    LEFT JOIN entity_attribute alive_count ON e.id = alive_count.entity_id AND alive_count.attribute_type_id = 27
+    WHERE group_name.char_value IS NOT NULL
+        AND e.id NOT IN (SELECT id FROM transformed_ai);
+
+
+
+
+delimiter |
+CREATE EVENT IF NOT EXISTS transform_tables
 ON SCHEDULE EVERY 1 WEEK
     STARTS TIMESTAMP(DATE(NOW() + INTERVAL 7 - WEEKDAY(NOW()) DAY), '00:00:00')
-DO
+DO BEGIN
+    CALL transform_missions();
     CALL transform_players();
+    CALL transform_markers();
+    CALL transform_ais();
+END|
+delimiter ;
