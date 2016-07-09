@@ -63,8 +63,8 @@ CREATE TABLE IF NOT EXISTS entity_event (
 
     PRIMARY KEY (id)
 ) ENGINE = InnoDB;
-ALTER TABLE entity_attribute ADD INDEX (mission_id);
-ALTER TABLE entity_attribute ADD INDEX (entity_id);
+ALTER TABLE entity_event ADD INDEX (mission_id);
+ALTER TABLE entity_event ADD INDEX (entity_id);
 
 CREATE TABLE IF NOT EXISTS entity_position (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
