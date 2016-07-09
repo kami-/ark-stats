@@ -36,7 +36,7 @@ ark_stats_entity_fnc_trackMarkers = {
                 ERROR("ark.stats.entity",FMT_2("Failed to create entity due to extension error for marker '%1' with ID '%2'.",_x,_entityId));
             };
             DEBUG("ark.stats.entity",FMT_2("Created new entity from marker '%1' with ID '%2'",_x,_entityId));
-            [_entityId, ATTRIBUTE_TYPE_ID_ENTITY_GAME_ID, "", _entityId] call ark_stats_ext_fnc_entityAttribute;
+            [_entityId, ATTRIBUTE_TYPE_ID_ENTITY_GAME_ID, _entityId, ""] call ark_stats_ext_fnc_entityAttribute;
             [_entityId, ATTRIBUTE_TYPE_ID_MARKER_SHAPE, "", markerShape _x] call ark_stats_ext_fnc_entityAttribute;
             [_entityId, ATTRIBUTE_TYPE_ID_MARKER_TYPE, "", markerType _x] call ark_stats_ext_fnc_entityAttribute;
             [_entityId, ATTRIBUTE_TYPE_ID_MARKER_NAME, "", _x] call ark_stats_ext_fnc_entityAttribute;
@@ -100,7 +100,7 @@ ark_stats_entity_fnc_trackPlayer = {
         };
         _unit setVariable ["ark_stats_entityId", _entityId, true];
         DEBUG("ark.stats.entity.player",FMT_2("Created new entity from unit '%1' with ID '%2'",_unit,_entityId));
-        [_entityId, ATTRIBUTE_TYPE_ID_ENTITY_GAME_ID, "", _entityId] call ark_stats_ext_fnc_entityAttribute;
+        [_entityId, ATTRIBUTE_TYPE_ID_ENTITY_GAME_ID, _entityId, ""] call ark_stats_ext_fnc_entityAttribute;
         [_entityId, ATTRIBUTE_TYPE_ID_ENTITY_SIDE, "", side _unit] call ark_stats_ext_fnc_entityAttribute;
         [_entityId, ATTRIBUTE_TYPE_ID_PLAYER_UID, "", getPlayerUID _unit] call ark_stats_ext_fnc_entityAttribute;
         [_entityId, ATTRIBUTE_TYPE_ID_PLAYER_NAME, "", name _unit] call ark_stats_ext_fnc_entityAttribute;
@@ -150,7 +150,7 @@ ark_stats_entity_fnc_trackAiGroup = {
                 DEBUG("ark.stats.entity.group",FMT_3("Unit '%1' from group '%2' was given group enitity ID '%3'.",_x,_group,_entityId));
             };
         } foreach units _group;
-        [_entityId, ATTRIBUTE_TYPE_ID_ENTITY_GAME_ID, "", _entityId] call ark_stats_ext_fnc_entityAttribute;
+        [_entityId, ATTRIBUTE_TYPE_ID_ENTITY_GAME_ID, _entityId, ""] call ark_stats_ext_fnc_entityAttribute;
         [_entityId, ATTRIBUTE_TYPE_ID_ENTITY_SIDE, "", side _group] call ark_stats_ext_fnc_entityAttribute;
         [_entityId, ATTRIBUTE_TYPE_ID_AI_GROUP, "", _group] call ark_stats_ext_fnc_entityAttribute;
         [_entityId, ATTRIBUTE_TYPE_ID_AI_GROUP_ALIVE_COUNT, _aliveCount, ""] call ark_stats_ext_fnc_entityAttribute;
