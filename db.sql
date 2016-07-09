@@ -388,7 +388,17 @@ CREATE PROCEDURE transform_ais()
 
 
 delimiter |
-CREATE EVENT IF NOT EXISTS transform_tables
+CREATE EVENT IF NOT EXISTS transform_saturday_session
+ON SCHEDULE EVERY 1 WEEK
+    STARTS TIMESTAMP(DATE(NOW() + INTERVAL 6 - WEEKDAY(NOW()) DAY), '00:00:00')
+DO BEGIN
+    CALL transform_missions();
+    CALL transform_players();
+    CALL transform_markers();
+    CALL transform_ais();
+END|
+
+CREATE EVENT IF NOT EXISTS transform_sunday_session
 ON SCHEDULE EVERY 1 WEEK
     STARTS TIMESTAMP(DATE(NOW() + INTERVAL 7 - WEEKDAY(NOW()) DAY), '00:00:00')
 DO BEGIN
