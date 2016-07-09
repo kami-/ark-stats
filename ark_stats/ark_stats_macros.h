@@ -49,6 +49,7 @@
 #define ATTRIBUTE_TYPE_ID_MISSION_WEATHER                           6
 
 #define ATTRIBUTE_TYPE_ID_ENTITY_SIDE                               7
+#define ATTRIBUTE_TYPE_ID_ENTITY_GAME_ID                            28
 
 #define ATTRIBUTE_TYPE_ID_PLAYER_UID                                8
 #define ATTRIBUTE_TYPE_ID_PLAYER_NAME                               9

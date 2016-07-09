@@ -163,6 +163,9 @@ INSERT INTO attribute_type(id, attribute_name) VALUES(@attribute_type_id, @attri
 SET @attribute_type_id = @attribute_type_id + 1; SET @attribute_name = 'ai.group.alive_count';
 INSERT INTO attribute_type(id, attribute_name) VALUES(@attribute_type_id, @attribute_name) ON DUPLICATE KEY UPDATE attribute_name = @attribute_name;
 
+SET @attribute_type_id = @attribute_type_id + 1; SET @attribute_name = 'entity.game_id';
+INSERT INTO attribute_type(id, attribute_name) VALUES(@attribute_type_id, @attribute_name) ON DUPLICATE KEY UPDATE attribute_name = @attribute_name;
+
 
 
 SET @event_type_id = 0;
