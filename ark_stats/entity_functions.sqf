@@ -53,6 +53,7 @@ ark_stats_entity_fnc_trackMarkers = {
 
 
 ark_stats_entity_fnc_track = {
+    sleep 1;
     while {!ark_stats_ext_hasError} do {
         if (ark_stats_ext_hasError) exitWith {
             ERROR("ark.stats.entity","Stopping tracking due to extension error.");
