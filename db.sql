@@ -78,6 +78,8 @@ CREATE TABLE IF NOT EXISTS entity_position (
 
     PRIMARY KEY (id)
 ) ENGINE = InnoDB;
+ALTER TABLE entity_position ADD INDEX (mission_id);
+ALTER TABLE entity_position ADD INDEX (entity_id);
 
 CREATE TABLE IF NOT EXISTS attribute_type (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT,
