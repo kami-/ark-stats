@@ -297,7 +297,7 @@ Response Extension::processRequest(const Request& request) {
                 Poco::Data::Keywords::use(charValue),
                 Poco::Data::Keywords::now;
         }
-        else if (request.type == "ep" && realParamsSize == 6) { // entity_position
+        else if (request.type == "ep" && realParamsSize == 8) { // entity_position
             uint32_t gameEntityId = parseUnsigned(request.params[1]);
             if (entityIds.count(gameEntityId) == 0) {
                 logger->error("[{}] Missing entityId for gameEntityId '{}'.", request.id, gameEntityId);
@@ -310,8 +310,10 @@ Response Extension::processRequest(const Request& request) {
             double posX = parseFloat(request.params[4]);
             double posY = parseFloat(request.params[5]);
             double posZ = parseFloat(request.params[6]);
-            logger->debug("[{}] Inserting into 'entity_position' values missionId '{}', entityId '{}', gameTime '{}', positionTypeId '{}', posX '{}', posY '{}, posZ '{}''.", request.id, missionId, entityId, gameTime, positionTypeId, posX, posY, posZ);
-            *session << "INSERT INTO entity_position(mission_id, entity_id, gameTime, position_type_id, pos_x, pos_y, pos_z) VALUES(?, ?, ?, ?, ?, ?, ?)",
+            double height = parseFloat(request.params[7]);
+            double direction = parseFloat(request.params[8]);
+            logger->debug("[{}] Inserting into 'entity_position' values missionId '{}', entityId '{}', gameTime '{}', positionTypeId '{}', posX '{}', posY '{}, posZ '{}', height '{}', direction '{}'.", request.id, missionId, entityId, gameTime, positionTypeId, posX, posY, posZ, height, direction);
+            *session << "INSERT INTO entity_position(mission_id, entity_id, gameTime, position_type_id, pos_x, pos_y, pos_z, height, direction) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 Poco::Data::Keywords::use(missionId),
                 Poco::Data::Keywords::use(entityId),
                 Poco::Data::Keywords::use(gameTime),
@@ -319,6 +321,8 @@ Response Extension::processRequest(const Request& request) {
                 Poco::Data::Keywords::use(posX),
                 Poco::Data::Keywords::use(posY),
                 Poco::Data::Keywords::use(posZ),
+                Poco::Data::Keywords::use(height),
+                Poco::Data::Keywords::use(direction),
                 Poco::Data::Keywords::now;
         }
         else {

@@ -47,7 +47,7 @@ ark_stats_entity_fnc_trackMarkers = {
             [_entityId, ATTRIBUTE_TYPE_ID_MARKER_COLOR, "", markerColor _x] call ark_stats_ext_fnc_entityAttribute;
             [_entityId, ATTRIBUTE_TYPE_ID_MARKER_BRUSH, "", markerBrush _x] call ark_stats_ext_fnc_entityAttribute;
             [_entityId, ATTRIBUTE_TYPE_ID_MARKER_ALPHA, markerAlpha _x, ""] call ark_stats_ext_fnc_entityAttribute;
-            [_entityId, POSITION_TYPE_ID_ENTITY_POSITION, markerPos _x] call ark_stats_ext_fnc_entityPosition;
+            [_entityId, POSITION_TYPE_ID_ENTITY_POSITION, markerPos _x, 0, markerDir _x] call ark_stats_ext_fnc_entityPosition;
         };
     } foreach allMapMarkers;
 };
@@ -157,7 +157,7 @@ ark_stats_entity_fnc_trackAiGroup = {
     };
     [_leader, _entityId] call ark_stats_entity_fnc_trackPosition;
     [_leader, _entityId] call ark_stats_entity_fnc_trackVehicle;
-    [_group, _entityId] call ark_stats_entity_fnc_trackAiWaypointPosition;
+    [_group, _leader, _entityId] call ark_stats_entity_fnc_trackAiWaypointPosition;
 };
 
 ark_stats_entity_fnc_trackPosition = {
@@ -168,20 +168,20 @@ ark_stats_entity_fnc_trackPosition = {
     _currentPosition = getPosASL _unit;
     if (count _previousPosition == 0 || {_previousPosition distance2D _currentPosition > ark_stats_entity_positiontrackingMinDistance}) then {
         _unit setVariable ["ark_stats_previousPosition", _currentPosition, false];
-        [_entityId, POSITION_TYPE_ID_ENTITY_POSITION, _currentPosition] call ark_stats_ext_fnc_entityPosition;
+        [_entityId, POSITION_TYPE_ID_ENTITY_POSITION, _currentPosition, getPosATL _unit select 2, direction _unit] call ark_stats_ext_fnc_entityPosition;
         TRACE("ark.stats.entity",FMT_5("Unit '%1' with ID '%2' has moved at least '%3' metres away from previous position '%4' to new position '%5'.",_unit,_entityId,ark_stats_entity_positiontrackingMinDistance,_previousPosition,_currentPosition));
     };
 };
 
 ark_stats_entity_fnc_trackAiWaypointPosition = {
-    FUN_ARGS_2(_group,_entityId);
+    FUN_ARGS_3(_group,_leader,_entityId);
 
     private ["_previousWaypointPosition", "_currentWaypointPosition"];
     _previousWaypointPosition = _group getVariable ["ark_stats_previousWaypointPosition", []];
     _currentWaypointPosition = getWPPos [_group, currentWaypoint _group];
     if (count _previousWaypointPosition == 0) then {
         _group setVariable ["ark_stats_previousWaypointPosition", _currentWaypointPosition, false];
-        [_entityId, POSITION_TYPE_ID_AI_WAYPOINT_POSITION, _currentWaypointPosition] call ark_stats_ext_fnc_entityPosition;
+        [_entityId, POSITION_TYPE_ID_AI_WAYPOINT_POSITION, _currentWaypointPosition, getPosATL _leader select 2, direction _leader] call ark_stats_ext_fnc_entityPosition;
         TRACE("ark.stats.entity.group",FMT_5("Group '%1' with ID '%2' has changed waypoint position from '%3' to new position '%4'.",_group,_entityId,_previousWaypointPosition,_currentWaypointPosition));
     };
 };

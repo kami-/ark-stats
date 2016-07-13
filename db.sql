@@ -72,9 +72,11 @@ CREATE TABLE IF NOT EXISTS entity_position (
     entity_id INT UNSIGNED NOT NULL,
     gameTime DOUBLE UNSIGNED NOT NULL,
     position_type_id INT UNSIGNED NOT NULL,
-    pos_x DOUBLE,
-    pos_y DOUBLE,
-    pos_z DOUBLE,
+    pos_x DOUBLE NOT NULL,
+    pos_y DOUBLE NOT NULL,
+    pos_z DOUBLE NOT NULL,
+    height DOUBLE NOT NULL,
+    direction DOUBLE NOT NULL,
 
     PRIMARY KEY (id)
 ) ENGINE = InnoDB;

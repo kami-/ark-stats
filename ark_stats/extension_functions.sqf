@@ -129,10 +129,10 @@ ark_stats_ext_fnc_entityEvent = {
 };
 
 ark_stats_ext_fnc_entityPosition = {
-    FUN_ARGS_3(_entityId,_positionTypeId,_position);
+    FUN_ARGS_5(_entityId,_positionTypeId,_position,_height,_direction);
 
     private ["_request", "_result"];
-    _request = format ["%1:%2:%3:%4:%5:%6:%7", CALL_TYPE_ID_ENTITY_POSITION, _entityId, time, _positionTypeId, _position select 0, _position select 1, _position select 2];
+    _request = format ["%1:%2:%3:%4:%5:%6:%7:%8:%9", CALL_TYPE_ID_ENTITY_POSITION, _entityId, time, _positionTypeId, _position select 0, _position select 1, _position select 2, _height, _direction];
     DEBUG("ark.stats.ext",FMT_1("Calling extension 'entity_position' command with request '%1'.",_request));
     _result = call compile (EXTENSION_NAME callExtension _request);
     DEBUG("ark.stats.ext",FMT_1("Extension 'entity_position' command result was '%1'.",_result));
